@@ -1,4 +1,4 @@
-import type { Task, TaskQuery } from '@gr8r/domain';
+import type { Task, TaskQuery } from '@daybook/domain';
 import type { TaskRepository } from '../../ports/repositories';
 import type { Collection } from './collection';
 
@@ -36,7 +36,8 @@ function matchesDue(task: Task, query: TaskQuery): boolean {
 
 function matchesSearch(task: Task, query: TaskQuery): boolean {
   if (!query.search) return true;
-  return task.title.toLowerCase().includes(query.search.toLowerCase());
+  const term = query.search.toLowerCase();
+  return task.title.toLowerCase().includes(term) || task.key.toLowerCase().includes(term);
 }
 
 function matches(task: Task, workspaceId: string, query: TaskQuery): boolean {
@@ -52,7 +53,14 @@ function matches(task: Task, workspaceId: string, query: TaskQuery): boolean {
   );
 }
 
+function keyNumber(task: Task): number {
+  const parsed = Number(task.key.split('-').pop());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export class MemoryTaskRepository implements TaskRepository {
+  private readonly sequences = new Map<string, number>();
+
   constructor(private readonly items: Collection<Task>) {}
 
   async list(workspaceId: string, query: TaskQuery): Promise<Task[]> {
@@ -76,5 +84,11 @@ export class MemoryTaskRepository implements TaskRepository {
 
   async remove(workspaceId: string, id: string): Promise<boolean> {
     return this.items.remove(id, { workspaceId });
+  }
+
+  async nextKeyNumber(workspaceId: string): Promise<number> {
+    const next = (this.sequences.get(workspaceId) ?? Math.max(0, ...this.items.filter({ workspaceId }).map(keyNumber))) + 1;
+    this.sequences.set(workspaceId, next);
+    return next;
   }
 }

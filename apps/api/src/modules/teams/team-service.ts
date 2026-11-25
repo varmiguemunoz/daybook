@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { teamSchema, type CreateTeamInput, type Team, type UpdateTeamInput } from '@gr8r/domain';
+import { teamSchema, type CreateTeamInput, type Team, type UpdateTeamInput } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';

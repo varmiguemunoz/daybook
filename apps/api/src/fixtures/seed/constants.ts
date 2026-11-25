@@ -1,4 +1,4 @@
-import type { Workspace } from '@gr8r/domain';
+import type { Workspace } from '@daybook/domain';
 
 const DAY = 86_400_000;
 
@@ -17,7 +17,7 @@ export const OWNER_ID = 'm1';
 export const defaultWorkspace: Workspace = {
   id: WORKSPACE_ID,
   clerkOrgId: 'org_seed',
-  name: 'Gr8r Studio',
+  name: 'Daybook Demo',
   color: '#1D1C1A',
   createdAt: Date.now(),
 };

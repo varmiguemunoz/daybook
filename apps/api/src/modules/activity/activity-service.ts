@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { activitySchema, type Activity, type ActivityVerb } from '@gr8r/domain';
+import { activitySchema, type Activity, type ActivityVerb } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 
 export interface ActivityInput {

@@ -34,5 +34,9 @@ const taskSchema = new Schema(
 taskSchema.index({ workspaceId: 1, projectId: 1, status: 1 });
 taskSchema.index({ workspaceId: 1, assigneeId: 1, dueDate: 1 });
 taskSchema.index({ title: 'text' });
+taskSchema.index({ workspaceId: 1, key: 1 }, { unique: true });
+
+const taskSequenceSchema = new Schema({ _id: String, value: { type: Number, required: true } }, { versionKey: false });
 
 export const TaskModel = { name: 'Task', schema: taskSchema };
+export const TaskSequenceModel = { name: 'TaskSequence', schema: taskSequenceSchema };

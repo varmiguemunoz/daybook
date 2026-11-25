@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import { SignOutButton } from '@clerk/react';
-import type { Member } from '@gr8r/domain';
-import { Icon } from '../../shared/ui/Icon';
-import { Avatar } from '../../shared/ui/Avatar';
-import { OrganizationSwitcher } from '../../features/organizations/OrganizationSwitcher';
+import type { Member } from '@daybook/domain';
+import { Icon } from '../../modules/core/components/Icon';
+import { Avatar } from '../../modules/core/components/Avatar';
+import { OrganizationSwitcher } from '../../modules/organizations/components/OrganizationSwitcher';
 import { PRIMARY_NAV, WORKSPACE_NAV } from './nav-items';
 import { SidebarItem } from './SidebarItem';
 

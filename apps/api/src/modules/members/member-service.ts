@@ -1,6 +1,11 @@
-import type { Member, UpdateMemberInput } from '@gr8r/domain';
+import type { Member, UpdateMemberInput } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { notFound } from '../../http/errors';
+import { emit } from '../../shared/events/bus';
+
+export function listMembers(repositories: Repositories, workspaceId: string): Promise<Member[]> {
+  return repositories.members.listByWorkspace(workspaceId);
+}
 
 export async function getMember(repositories: Repositories, workspaceId: string, id: string): Promise<Member> {
   const member = await repositories.members.findById(workspaceId, id);
@@ -25,4 +30,5 @@ export async function purgeMember(repositories: Repositories, workspaceId: strin
       .map(team => repositories.teams.update(workspaceId, team.id, { memberIds: team.memberIds.filter(memberId => memberId !== id) })),
   ]);
   await repositories.members.remove(workspaceId, id);
+  emit(workspaceId, { type: 'member.removed', payload: id });
 }

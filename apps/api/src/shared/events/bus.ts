@@ -1,4 +1,9 @@
-type Listener = (payload: unknown) => void;
+export interface BusEvent {
+  type: string;
+  payload?: unknown;
+}
+
+type Listener = (event: BusEvent) => void;
 
 const channels = new Map<string, Set<Listener>>();
 
@@ -12,7 +17,7 @@ export function subscribe(workspaceId: string, listener: Listener): () => void {
   };
 }
 
-export function emit(workspaceId: string, event: { type: string; payload?: unknown }): void {
+export function emit(workspaceId: string, event: BusEvent): void {
   const set = channels.get(workspaceId);
   if (!set) return;
   for (const listener of set) listener(event);

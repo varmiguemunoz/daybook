@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { notificationSchema, type Notification } from '@gr8r/domain';
+import { notificationSchema, type Notification } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { notFound } from '../../http/errors';
+import { emit } from '../../shared/events/bus';
+import { sendEmail } from '../../shared/notifications/email';
 
 export interface NotifyInput {
   workspaceId: string;
@@ -15,13 +17,12 @@ export interface NotifyInput {
   channel?: Notification['channel'];
   recipientEmail?: string;
   emailSubject?: string;
-  emailHtml?: string;
+  emailText?: string;
 }
 
 async function deliverEmail(input: NotifyInput, notificationId: string, repositories: Repositories): Promise<void> {
   if (input.channel === 'inapp' || !input.recipientEmail || !input.emailSubject) return;
-  const { sendEmail } = await import('../../shared/notifications/email');
-  const sent = await sendEmail(input.recipientEmail, input.emailSubject, input.emailHtml ?? input.text);
+  const sent = await sendEmail(input.recipientEmail, input.emailSubject, input.emailText ?? input.text);
   if (sent) await repositories.notifications.update(notificationId, { emailedAt: Date.now() });
 }
 
@@ -42,12 +43,15 @@ export async function notify(repositories: Repositories, input: NotifyInput): Pr
     at: Date.now(),
   });
   const created = await repositories.notifications.create(notification);
-  await deliverEmail(input, created.id, repositories);
+  emit(input.workspaceId, { type: 'notification.created' });
+  deliverEmail(input, created.id, repositories).catch(error => console.error('[email] delivery failed', error));
   return created;
 }
 
-export async function listNotifications(repositories: Repositories, userId: string, unreadOnly?: boolean): Promise<Notification[]> {
-  return repositories.notifications.listByUser(userId, unreadOnly);
+const LIST_LIMIT = 50;
+
+export async function listNotifications(repositories: Repositories, userId: string, unreadOnly: boolean): Promise<Notification[]> {
+  return repositories.notifications.listByUser(userId, unreadOnly, LIST_LIMIT);
 }
 
 export async function markRead(repositories: Repositories, userId: string, id: string): Promise<Notification> {

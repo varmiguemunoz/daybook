@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import type { Activity } from '@gr8r/domain';
-import { Skeleton } from '../shared/ui/Skeleton';
-import { useActivity } from '../features/activity/queries';
-import { useMembers } from '../features/members/queries';
-import { useTasks } from '../features/tasks/queries';
-import { ActivityFilters, type ActivityFilter } from '../features/activity/components/ActivityFilters';
-import { ActivityFeedBody } from '../features/activity/components/ActivityFeedBody';
+import type { Activity } from '@daybook/domain';
+import { Skeleton } from '../modules/core/components/Skeleton';
+import { useActivity } from '../modules/activity/services/queries';
+import { useMembers } from '../modules/members/services/queries';
+import { useTasks } from '../modules/tasks/services/queries';
+import { ActivityFilters, type ActivityFilter } from '../modules/activity/components/ActivityFilters';
+import { ActivityFeedBody } from '../modules/activity/components/ActivityFeedBody';
 
 function matches(entry: Activity, filter: ActivityFilter): boolean {
   if (filter === 'all') return true;

@@ -1,4 +1,4 @@
-import type { Member } from '@gr8r/domain';
+import type { Member } from '@daybook/domain';
 import { WORKSPACE_ID, hoursAgo } from './constants';
 
 export const members: Member[] = [
@@ -6,7 +6,7 @@ export const members: Member[] = [
     id: 'm1',
     workspaceId: WORKSPACE_ID,
     name: 'Tanjim Islam',
-    email: 'hello@gr8rstudio.com',
+    email: 'hello@daybook.test',
     role: 'admin',
     title: 'Head of Product',
     color: '#5A67D8',
@@ -19,7 +19,7 @@ export const members: Member[] = [
     id: 'm2',
     workspaceId: WORKSPACE_ID,
     name: 'Sarah Chen',
-    email: 'sarah@gr8rstudio.com',
+    email: 'sarah@daybook.test',
     role: 'admin',
     title: 'Design Lead',
     color: '#C54B78',
@@ -32,7 +32,7 @@ export const members: Member[] = [
     id: 'm3',
     workspaceId: WORKSPACE_ID,
     name: 'John Carter',
-    email: 'john@gr8rstudio.com',
+    email: 'john@daybook.test',
     role: 'member',
     title: 'Frontend Engineer',
     color: '#3B82C4',
@@ -45,7 +45,7 @@ export const members: Member[] = [
     id: 'm4',
     workspaceId: WORKSPACE_ID,
     name: 'Emma Wilson',
-    email: 'emma@gr8rstudio.com',
+    email: 'emma@daybook.test',
     role: 'member',
     title: 'Product Designer',
     color: '#23918A',
@@ -58,7 +58,7 @@ export const members: Member[] = [
     id: 'm5',
     workspaceId: WORKSPACE_ID,
     name: 'Priya Patel',
-    email: 'priya@gr8rstudio.com',
+    email: 'priya@daybook.test',
     role: 'member',
     title: 'Content Strategist',
     color: '#C48A1E',

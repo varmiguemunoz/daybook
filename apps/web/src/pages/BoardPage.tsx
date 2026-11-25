@@ -1,11 +1,11 @@
-import { Skeleton } from '../shared/ui/Skeleton';
-import { PageHeader } from '../shared/ui/PageHeader';
-import { ViewModeSwitch } from '../features/views/components/ViewModeSwitch';
-import { ViewToolbar } from '../features/views/components/ViewToolbar';
-import { Board } from '../features/views/components/Board';
-import { useTaskView } from '../features/tasks/use-task-view';
-import { NewTaskButton } from '../features/tasks/components/NewTaskButton';
-import { TaskFilters } from '../features/tasks/components/TaskFilters';
+import { Skeleton } from '../modules/core/components/Skeleton';
+import { PageHeader } from '../modules/core/components/PageHeader';
+import { ViewModeSwitch } from '../modules/views/components/ViewModeSwitch';
+import { ViewToolbar } from '../modules/views/components/ViewToolbar';
+import { Board } from '../modules/views/components/Board';
+import { useTaskView } from '../modules/tasks/hooks/use-task-view';
+import { NewTaskButton } from '../modules/tasks/components/NewTaskButton';
+import { TaskFilters } from '../modules/tasks/components/TaskFilters';
 
 export function BoardPage() {
   const view = useTaskView('board');

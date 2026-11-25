@@ -46,6 +46,10 @@ export class Collection<T extends { id: string }> {
     return this.patch(current.id, patch) as T;
   }
 
+  removeWhere(where: Where<T>): void {
+    this.items = this.items.filter(item => !matches(item, where));
+  }
+
   remove(id: string, where: Where<T> = {}): boolean {
     if (!this.find(id, where)) return false;
     this.items = this.items.filter(item => item.id !== id);

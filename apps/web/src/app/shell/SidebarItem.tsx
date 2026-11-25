@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Icon } from '../../shared/ui/Icon';
+import { Icon } from '../../modules/core/components/Icon';
 import type { NavEntry } from './nav-items';
 
 interface SidebarItemProps {

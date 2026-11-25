@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { calendarEventSchema, type CalendarEvent } from '@gr8r/domain';
+import { calendarEventSchema, type CalendarEvent } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';

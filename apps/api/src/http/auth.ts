@@ -19,7 +19,6 @@ export type ConfirmMembership = (clerkOrgId: string, clerkUserId: string) => Pro
 declare module 'hono' {
   interface ContextVariableMap {
     identity: Identity;
-    confirmMembership: ConfirmMembership;
   }
 }
 

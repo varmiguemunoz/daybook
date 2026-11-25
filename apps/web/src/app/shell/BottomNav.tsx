@@ -1,4 +1,4 @@
-import { Icon } from '../../shared/ui/Icon';
+import { Icon } from '../../modules/core/components/Icon';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export function BottomNav() {

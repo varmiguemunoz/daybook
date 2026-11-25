@@ -1,26 +1,26 @@
 import { useState } from 'react';
-import { useBootstrap } from '../features/workspace/queries';
-import { useTaskUi } from '../features/tasks/task-ui-store';
-import { useTasks } from '../features/tasks/queries';
-import { Skeleton } from '../shared/ui/Skeleton';
-import { Modal } from '../shared/ui/Modal';
-import { HomeHeader } from '../features/home/components/HomeHeader';
-import { HomeStats } from '../features/home/components/HomeStats';
-import { MyTasksPanel } from '../features/home/components/MyTasksPanel';
-import { RecentActivityPanel } from '../features/home/components/RecentActivityPanel';
-import { InviteForm } from '../features/members/components/InviteForm';
-import type { HomeData } from '../features/home/home-data';
+import { useBootstrap } from '../modules/workspace/services/queries';
+import { useTaskUi } from '../modules/tasks/states/task-ui-store';
+import { useTasks } from '../modules/tasks/services/queries';
+import { Skeleton } from '../modules/core/components/Skeleton';
+import { Modal } from '../modules/core/components/Modal';
+import { HomeHeader } from '../modules/home/components/HomeHeader';
+import { HomeStats } from '../modules/home/components/HomeStats';
+import { MyTasksPanel } from '../modules/home/components/MyTasksPanel';
+import { RecentActivityPanel } from '../modules/home/components/RecentActivityPanel';
+import { InviteForm } from '../modules/members/components/InviteForm';
+import type { HomeData } from '../modules/home/lib/home-data';
 
 export function HomePage() {
   const { data, isLoading } = useBootstrap();
   const openComposer = useTaskUi(state => state.openComposer);
   const { data: tasks } = useTasks();
   const [inviteOpen, setInviteOpen] = useState(false);
-  if (isLoading || !data) return <Skeleton lines={10} />;
+  if (isLoading || !data || !tasks) return <Skeleton lines={10} />;
 
   const home: HomeData = {
     me: data.me,
-    tasks: tasks ?? data.tasks,
+    tasks,
     members: data.members,
     activity: data.activity,
   };

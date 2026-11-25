@@ -1,4 +1,4 @@
-import type { Activity, CalendarEvent, Comment, FileRecord, Member, Notification, SavedView, Task, TaskQuery, Team, Workspace } from '@gr8r/domain';
+import type { Activity, CalendarEvent, Comment, FileRecord, Member, Notification, SavedView, Task, TaskQuery, Team, Workspace } from '@daybook/domain';
 
 export interface TaskRepository {
   list(workspaceId: string, query: TaskQuery): Promise<Task[]>;
@@ -6,6 +6,7 @@ export interface TaskRepository {
   create(task: Task): Promise<Task>;
   update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null>;
   remove(workspaceId: string, id: string): Promise<boolean>;
+  nextKeyNumber(workspaceId: string): Promise<number>;
 }
 
 export interface MemberRepository {
@@ -21,6 +22,7 @@ export interface MemberRepository {
 export interface WorkspaceRepository {
   findByClerkOrgId(clerkOrgId: string): Promise<Workspace | null>;
   upsert(workspace: Workspace, patch: Partial<Workspace>): Promise<Workspace>;
+  purge(id: string): Promise<void>;
 }
 
 export interface ActivityRepository {
@@ -61,13 +63,14 @@ export interface CalendarEventRepository {
 
 export interface SavedViewRepository {
   listByWorkspace(workspaceId: string, ownerId?: string): Promise<SavedView[]>;
+  findById(workspaceId: string, id: string): Promise<SavedView | null>;
   create(view: SavedView): Promise<SavedView>;
   update(workspaceId: string, id: string, patch: Partial<SavedView>): Promise<SavedView | null>;
   remove(workspaceId: string, id: string): Promise<boolean>;
 }
 
 export interface NotificationRepository {
-  listByUser(userId: string, unreadOnly?: boolean): Promise<Notification[]>;
+  listByUser(userId: string, unreadOnly: boolean, limit: number): Promise<Notification[]>;
   create(notification: Notification): Promise<Notification>;
   update(id: string, patch: Partial<Notification>): Promise<Notification | null>;
   markRead(userId: string, id: string): Promise<Notification | null>;

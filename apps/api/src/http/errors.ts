@@ -5,6 +5,7 @@ export class AppError extends Error {
     readonly status: ErrorStatus,
     message: string,
     readonly issues: unknown = null,
+    readonly code: string | null = null,
   ) {
     super(message);
     this.name = 'AppError';
@@ -24,7 +25,7 @@ export function unauthorized(): AppError {
 }
 
 export function organizationRequired(): AppError {
-  return new AppError(403, 'Select an organization to continue');
+  return new AppError(403, 'Select an organization to continue', null, 'organization_required');
 }
 
 export function invalidInput(issues: unknown): AppError {

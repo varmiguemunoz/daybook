@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { commentSchema, type Comment, type CreateCommentInput } from '@gr8r/domain';
+import { can, commentSchema, type Comment, type CreateCommentInput, type Member } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
-import { notFound } from '../../http/errors';
+import { forbidden, notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';
 import { notify } from '../notifications/notification-service';
 import { emit } from '../../shared/events/bus';
@@ -32,7 +32,7 @@ async function notifyAssignee(
     channel: assignee.email ? 'both' : 'inapp',
     recipientEmail: assignee.email,
     emailSubject: `Comment on ${task.title}`,
-    emailHtml: `<p>New comment on <b>${task.title}</b>: ${body.slice(0, 200)}</p>`,
+    emailText: `New comment on ${task.title}: ${body.slice(0, 200)}`,
   });
 }
 
@@ -71,26 +71,35 @@ export async function createComment(
   return created;
 }
 
-export async function updateComment(repositories: Repositories, workspaceId: string, id: string, body: string): Promise<Comment> {
+async function getComment(repositories: Repositories, workspaceId: string, id: string): Promise<Comment> {
+  const comment = await repositories.comments.findById(workspaceId, id);
+  if (!comment) throw notFound('Comment');
+  return comment;
+}
+
+export async function updateComment(repositories: Repositories, workspaceId: string, id: string, actor: Member, body: string): Promise<Comment> {
+  const comment = await getComment(repositories, workspaceId, id);
+  if (comment.authorId !== actor.id) throw forbidden('edit comments written by someone else');
   const updated = await repositories.comments.update(workspaceId, id, { body, editedAt: Date.now() });
   if (!updated) throw notFound('Comment');
   return updated;
 }
 
-export async function deleteComment(repositories: Repositories, workspaceId: string, id: string): Promise<void> {
+export async function deleteComment(repositories: Repositories, workspaceId: string, id: string, actor: Member): Promise<void> {
+  const comment = await getComment(repositories, workspaceId, id);
+  if (comment.authorId !== actor.id && !can(actor.role, 'workspace:manage')) throw forbidden('delete comments written by someone else');
   const removed = await repositories.comments.remove(workspaceId, id);
   if (!removed) throw notFound('Comment');
 }
 
 export async function toggleReaction(repositories: Repositories, workspaceId: string, commentId: string, memberId: string, emoji: string): Promise<Comment> {
-  const current = await repositories.comments.findById(workspaceId, commentId);
-  if (!current) throw notFound('Comment');
-  const reactions = { ...current.reactions };
-  const list = reactions[emoji] ?? [];
+  const current = await getComment(repositories, workspaceId, commentId);
+  const reactions = new Map(Object.entries(current.reactions));
+  const list = reactions.get(emoji) ?? [];
   const next = list.includes(memberId) ? list.filter(id => id !== memberId) : [...list, memberId];
-  if (next.length === 0) delete reactions[emoji];
-  else reactions[emoji] = next;
-  const updated = await repositories.comments.update(workspaceId, commentId, { reactions });
+  if (next.length === 0) reactions.delete(emoji);
+  else reactions.set(emoji, next);
+  const updated = await repositories.comments.update(workspaceId, commentId, { reactions: Object.fromEntries(reactions) });
   if (!updated) throw notFound('Comment');
   return updated;
 }

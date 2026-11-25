@@ -1,11 +1,26 @@
-import type { Activity, Member, Workspace } from '@gr8r/domain';
+import type { Activity, Member, Workspace } from '@daybook/domain';
 import { modelFor, toDomain, upsertUpdate } from './connection';
-import { ActivityModel, MemberModel, WorkspaceModel } from './models/support';
+import {
+  ActivityModel,
+  CommentModel,
+  EventModel,
+  FileModel,
+  MemberModel,
+  NotificationModel,
+  SavedViewModel,
+  TeamModel,
+  WorkspaceModel,
+} from './models/support';
+import { TaskModel, TaskSequenceModel } from './models/task';
 
 const WorkspaceDocument = modelFor(WorkspaceModel);
 const MemberDocument = modelFor(MemberModel);
 const ActivityDocument = modelFor(ActivityModel);
-const UPSERT = { upsert: true, new: true, lean: true };
+const TaskSequenceDocument = modelFor(TaskSequenceModel);
+const SCOPED_DOCUMENTS = [MemberModel, ActivityModel, TeamModel, CommentModel, FileModel, EventModel, SavedViewModel, NotificationModel, TaskModel].map(
+  modelFor,
+);
+const UPSERT = { upsert: true, returnDocument: 'after', lean: true };
 
 export class MongoMemberRepository {
   async listByWorkspace(workspaceId: string): Promise<Member[]> {
@@ -27,7 +42,7 @@ export class MongoMemberRepository {
   }
 
   async update(workspaceId: string, id: string, patch: Partial<Member>): Promise<Member | null> {
-    return toDomain<Member>(await MemberDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { new: true, lean: true }));
+    return toDomain<Member>(await MemberDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { returnDocument: 'after', lean: true }));
   }
 
   async updateByClerkUserId(clerkUserId: string, patch: Partial<Member>): Promise<void> {
@@ -48,6 +63,12 @@ export class MongoWorkspaceRepository {
   async upsert(workspace: Workspace, patch: Partial<Workspace>): Promise<Workspace> {
     const filter = { clerkOrgId: workspace.clerkOrgId };
     return toDomain<Workspace>(await WorkspaceDocument.findOneAndUpdate(filter, upsertUpdate(workspace, patch), UPSERT)) as Workspace;
+  }
+
+  async purge(id: string): Promise<void> {
+    await Promise.all(SCOPED_DOCUMENTS.map(document => document.deleteMany({ workspaceId: id })));
+    await TaskSequenceDocument.deleteOne({ _id: id });
+    await WorkspaceDocument.deleteOne({ _id: id });
   }
 }
 

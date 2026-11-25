@@ -42,32 +42,12 @@
 .trow.sel {
   background: var(--accent-soft);
 }
-.trow.drop-before {
-  box-shadow: inset 0 2px 0 var(--accent);
-}
-.trow.drop-after {
-  box-shadow: inset 0 -2px 0 var(--accent);
-}
-.trow.dragging {
-  opacity: 0.4;
-}
 .trow > div {
   padding: 0 8px;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 6px;
-}
-.trow .handle {
-  opacity: 0;
-  cursor: grab;
-  color: var(--text-4);
-  width: 16px;
-  justify-content: center;
-  padding: 0;
-}
-.trow:hover .handle {
-  opacity: 1;
 }
 .trow .ttl {
   font-size: var(--fs);
@@ -95,13 +75,6 @@
   color: var(--text-3);
   flex-shrink: 0;
 }
-.trow .meta-mini {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-3);
-  font-size: var(--fs-2xs);
-}
 .grp {
   display: flex;
   align-items: center;
@@ -124,22 +97,6 @@
 .grp:hover .ibtn {
   opacity: 1;
 }
-.subrows {
-  background: var(--sunken);
-}
-.subrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding-left: 64px;
-  border-bottom: 1px solid var(--divider);
-  font-size: var(--fs-sm);
-}
-.subrow.done span {
-  color: var(--text-3);
-  text-decoration: line-through;
-}
 .addrow {
   display: flex;
   align-items: center;
@@ -155,15 +112,6 @@
 .addrow:hover {
   color: var(--text);
   background: var(--surface-2);
-}
-.inline-in {
-  border: 0;
-  background: transparent;
-  height: 100%;
-  width: 100%;
-  font-size: var(--fs);
-  padding: 0;
-  outline: none;
 }
 .bulkbar {
   position: fixed;
@@ -234,14 +182,6 @@
   text-decoration: line-through;
   color: var(--text-3);
 }
-.mini .pj {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: var(--fs-xs);
-  color: var(--text-2);
-  max-width: 140px;
-}
 .pdot {
   width: 8px;
   height: 8px;
@@ -266,6 +206,3 @@
 }
 /* List rows start with an 18px drag handle + 30px checkbox column; pulling the wrapper left by
    the handle+cell inset puts the checkbox (and group chevrons) exactly on the shared gutter. */
-.list-wrap {
-  padding: 0 var(--gutter) 90px calc(var(--gutter) - 26px);
-}

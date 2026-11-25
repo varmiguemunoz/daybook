@@ -131,30 +131,6 @@
 .tcard[data-theme-preview='dark'] .tprev .m {
   background: #1d1d1c;
 }
-.swatches {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.sw {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--c);
-  display: grid;
-  place-items: center;
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-  transition: transform var(--dur);
-}
-.sw:hover {
-  transform: scale(1.08);
-}
-.sw.on {
-  box-shadow:
-    0 0 0 2px var(--surface),
-    0 0 0 4px var(--c);
-}
 .perm-t {
   width: 100%;
   border-collapse: collapse;

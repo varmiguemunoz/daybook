@@ -1,25 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { taskSchema, type ActivityVerb, type CreateTaskInput, type Task, type TaskQuery, type UpdateTaskInput, type Workspace } from '@gr8r/domain';
+import { taskSchema, type ActivityVerb, type CreateTaskInput, type Task, type TaskQuery, type UpdateTaskInput, type Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { invalidInput, notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';
 import { notify } from '../notifications/notification-service';
 import { emit } from '../../shared/events/bus';
-
-function keyNumber(key: string): number {
-  const parsed = Number(key.split('-').pop());
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function nextPosition(tasks: readonly Task[]): { order: number; number: number } {
-  let order = 0;
-  let number = 0;
-  for (const task of tasks) {
-    order = Math.max(order, task.order);
-    number = Math.max(number, keyNumber(task.key));
-  }
-  return { order: order + 1, number: number + 1 };
-}
 
 export function listTasks(repositories: Repositories, workspaceId: string, query: TaskQuery): Promise<Task[]> {
   return repositories.tasks.list(workspaceId, query);
@@ -55,11 +40,11 @@ async function notifyOnAssign(
     channel: assignee.email ? 'both' : 'inapp',
     recipientEmail: assignee.email,
     emailSubject: `Assigned: ${taskTitle}`,
-    emailHtml: `<p>You were assigned <b>${taskTitle}</b> (${taskKey}).</p>`,
+    emailText: `You were assigned ${taskTitle} (${taskKey}).`,
   });
 }
 
-function buildTask(input: CreateTaskInput, workspace: Workspace, order: number, number: number): Task {
+function buildTask(input: CreateTaskInput, workspace: Workspace, number: number): Task {
   const now = Date.now();
   return taskSchema.parse({
     ...input,
@@ -67,7 +52,7 @@ function buildTask(input: CreateTaskInput, workspace: Workspace, order: number, 
     id: `t_${randomUUID()}`,
     workspaceId: workspace.id,
     key: `TSK-${number}`,
-    order,
+    order: number,
     subtasks: [],
     attachments: [],
     dependencyIds: [],
@@ -86,9 +71,8 @@ async function assertAssignee(repositories: Repositories, workspaceId: string, a
 
 export async function createTask(repositories: Repositories, workspace: Workspace, input: CreateTaskInput, actorId: string): Promise<Task> {
   await assertAssignee(repositories, workspace.id, input.assigneeId);
-  const siblings = await repositories.tasks.list(workspace.id, {});
-  const { order, number } = nextPosition(siblings);
-  const task = buildTask(input, workspace, order, number);
+  const number = await repositories.tasks.nextKeyNumber(workspace.id);
+  const task = buildTask(input, workspace, number);
 
   const created = await repositories.tasks.create(task);
   await recordActivity(repositories, {

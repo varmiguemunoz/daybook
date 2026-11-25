@@ -1,4 +1,4 @@
-import type { CalendarEvent, Comment, FileRecord, Notification, SavedView, Team } from '@gr8r/domain';
+import type { CalendarEvent, Comment, FileRecord, Notification, SavedView, Team } from '@daybook/domain';
 import type {
   CalendarEventRepository,
   CommentRepository,
@@ -111,6 +111,10 @@ export class MemorySavedViewRepository implements SavedViewRepository {
     return this.items.filter(ownerId ? { workspaceId, ownerId } : { workspaceId });
   }
 
+  async findById(workspaceId: string, id: string): Promise<SavedView | null> {
+    return this.items.find(id, { workspaceId });
+  }
+
   async create(view: SavedView): Promise<SavedView> {
     return this.items.insert(view);
   }
@@ -127,8 +131,11 @@ export class MemorySavedViewRepository implements SavedViewRepository {
 export class MemoryNotificationRepository implements NotificationRepository {
   constructor(private readonly items: Collection<Notification>) {}
 
-  async listByUser(userId: string, unreadOnly?: boolean): Promise<Notification[]> {
-    return this.items.filter(unreadOnly ? { userId, read: false } : { userId }).sort((a, b) => b.at - a.at);
+  async listByUser(userId: string, unreadOnly: boolean, limit: number): Promise<Notification[]> {
+    return this.items
+      .filter(unreadOnly ? { userId, read: false } : { userId })
+      .sort((a, b) => b.at - a.at)
+      .slice(0, limit);
   }
 
   async create(notification: Notification): Promise<Notification> {

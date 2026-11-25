@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useOrganization } from '@clerk/react';
 import { useLocation } from 'react-router-dom';
-import { useMembers } from '../features/members/queries';
-import { MembersHeader, type MembersTab } from '../features/members/components/MembersHeader';
-import { MembersSection } from '../features/members/components/MembersSection';
-import { PermissionsTable } from '../features/members/components/PermissionsTable';
-import { TeamsManager } from '../features/teams/components/TeamsManager';
+import { useMembers } from '../modules/members/services/queries';
+import { MembersHeader, type MembersTab } from '../modules/members/components/MembersHeader';
+import { MembersSection } from '../modules/members/components/MembersSection';
+import { PermissionsTable } from '../modules/members/components/PermissionsTable';
+import { TeamsManager } from '../modules/teams/components/TeamsManager';
 
 export function MembersPage() {
   const { data: members = [] } = useMembers();

@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Task, TaskQuery } from '@gr8r/domain';
+import type { Task, TaskQuery } from '@daybook/domain';
 import { modelFor, toDomain } from './connection';
-import { TaskModel } from './models/task';
+import { TaskModel, TaskSequenceModel } from './models/task';
 
 const TaskDocument = modelFor(TaskModel) as any;
+const TaskSequenceDocument = modelFor(TaskSequenceModel) as any;
+const KEY_NUMBER = { $convert: { input: { $arrayElemAt: [{ $split: ['$key', '-'] }, -1] }, to: 'int', onError: 0, onNull: 0 } };
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -30,7 +32,9 @@ function applyArrayFilters(filter: Record<string, unknown>, query: TaskQuery): v
 }
 
 function applyTextFilter(filter: Record<string, unknown>, query: TaskQuery): void {
-  if (query.search) filter.title = { $regex: escapeRegExp(query.search), $options: 'i' };
+  if (!query.search) return;
+  const pattern = { $regex: escapeRegExp(query.search), $options: 'i' };
+  filter.$or = [{ title: pattern }, { key: pattern }];
 }
 
 export class MongoTaskRepository {
@@ -48,11 +52,20 @@ export class MongoTaskRepository {
   }
 
   async update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null> {
-    return toDomain<Task>(await TaskDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { new: true, lean: true }));
+    return toDomain<Task>(await TaskDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { returnDocument: 'after', lean: true }));
   }
 
   async remove(workspaceId: string, id: string): Promise<boolean> {
     const result = await TaskDocument.deleteOne({ _id: id, workspaceId });
     return result.deletedCount === 1;
+  }
+
+  async nextKeyNumber(workspaceId: string): Promise<number> {
+    if (!(await TaskSequenceDocument.exists({ _id: workspaceId }))) {
+      const [highest] = await TaskDocument.aggregate([{ $match: { workspaceId } }, { $group: { _id: null, value: { $max: KEY_NUMBER } } }]);
+      await TaskSequenceDocument.updateOne({ _id: workspaceId }, { $max: { value: highest?.value ?? 0 } }, { upsert: true });
+    }
+    const sequence = await TaskSequenceDocument.findOneAndUpdate({ _id: workspaceId }, { $inc: { value: 1 } }, { returnDocument: 'after', lean: true });
+    return sequence.value;
   }
 }

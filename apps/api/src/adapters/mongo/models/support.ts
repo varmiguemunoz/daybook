@@ -99,7 +99,7 @@ const fileSchema = new Schema(
   },
   { versionKey: false },
 );
-fileSchema.index({ projectId: 1, at: -1 });
+fileSchema.index({ workspaceId: 1, at: -1 });
 export const FileModel = { name: 'File', schema: fileSchema };
 
 const eventSchema = new Schema(
@@ -136,6 +136,7 @@ const savedViewSchema = new Schema(
   },
   { versionKey: false },
 );
+savedViewSchema.index({ workspaceId: 1, ownerId: 1 });
 export const SavedViewModel = { name: 'SavedView', schema: savedViewSchema };
 
 const notificationSchema = new Schema(

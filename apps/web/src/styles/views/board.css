@@ -30,16 +30,6 @@
   padding-top: 8px;
   cursor: pointer;
 }
-.bcol.collapsed .vname {
-  writing-mode: vertical-rl;
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  margin-top: 8px;
-  color: var(--text-2);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
 .bcol-h {
   display: flex;
   align-items: center;
@@ -93,13 +83,6 @@
   box-shadow:
     0 2px 6px -2px rgba(0, 0, 0, 0.08),
     0 0 0 1px var(--border-strong);
-}
-.kcard.dragging {
-  opacity: 0.35;
-}
-.kcard.ghost {
-  box-shadow: var(--shadow-drag);
-  transform: rotate(1.5deg);
 }
 .kcard .top {
   display: flex;
@@ -164,13 +147,6 @@
   font-size: 11px;
   color: var(--text-3);
 }
-.drop-line {
-  height: 2px;
-  border-radius: 2px;
-  background: var(--accent);
-  margin: -4px 2px;
-  flex-shrink: 0;
-}
 .addcard {
   display: flex;
   align-items: center;
@@ -221,16 +197,6 @@
   height: var(--h-sm);
   font-size: var(--fs-xs);
   padding: 0 8px;
-}
-.chipsbar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px var(--gutter);
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-  font-size: var(--fs-xs);
-  color: var(--text-3);
 }
 /* columns scroll on wheel/touch without a visible bar, so every column keeps the same inner width */
 .bcol-b {

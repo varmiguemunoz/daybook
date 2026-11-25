@@ -29,20 +29,9 @@
     transition: transform 0.22s var(--ease);
     box-shadow: var(--shadow-pop);
   }
-  .shell.mnav .side {
-    transform: none;
-  }
   .shell.collapsed .side .sitem {
     justify-content: flex-start;
     padding: 0 8px;
-  }
-  .side-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: var(--overlay);
-    z-index: 69;
-    animation: fade 0.14s both;
   }
   :root {
     --gutter: 16px;
@@ -83,14 +72,8 @@
   .set-in {
     padding: 20px 16px 96px;
   }
-  .tl {
-    grid-template-columns: 170px minmax(0, 1fr);
-  }
   .board {
     padding-bottom: 90px;
-  }
-  .proj-h {
-    padding-top: 16px;
   }
 }
 @media (max-width: 640px) {
@@ -124,15 +107,6 @@
   .bottomnav button.on {
     color: var(--text);
   }
-  .bottomnav .bdot {
-    position: absolute;
-    top: 3px;
-    left: calc(50% + 6px);
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
   .hide-m {
     display: none !important;
   }
@@ -144,9 +118,6 @@
     width: 100%;
   }
   /* list & table become stacked cards */
-  .list-wrap {
-    padding-left: var(--gutter);
-  }
   .tlist .thead {
     display: none;
   }
@@ -163,9 +134,6 @@
   .tlist .trow > div {
     padding: 0;
   }
-  .tlist .trow .handle {
-    display: none;
-  }
   .tlist .trow .ttl {
     flex: 1 1 calc(100% - 30px);
     order: 1;
@@ -176,11 +144,7 @@
   .tlist .trow .c-meta {
     order: 2;
   }
-  .tlist .trow > div.c-lbl:empty {
-    display: none;
-  }
-  .drawer,
-  .drawer.full {
+  .drawer {
     width: 100vw;
     right: 0;
     left: 0;
@@ -190,8 +154,7 @@
     border-radius: 0;
     border: 0;
   }
-  .drawer-b,
-  .drawer.full .drawer-b {
+  .drawer-b {
     padding: 16px 16px 40px;
   }
   .modal-wrap {
@@ -202,21 +165,8 @@
     max-height: 92vh;
     border-radius: 14px 14px 0 0;
   }
-  .opts,
-  .tmpls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .themecards {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .fbuild {
-    min-width: 0;
-  }
-  .frow {
-    grid-template-columns: 1fr 1fr;
-  }
-  .frow .conj {
-    display: none;
   }
   .cal-g {
     grid-auto-rows: minmax(72px, 1fr);
@@ -239,20 +189,11 @@
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
-  .tl-left {
-    display: none;
+  .toasts {
+    inset: calc(12px + env(safe-area-inset-top, 0px)) 16px auto 16px;
   }
-  .tl {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  #toasts {
-    left: 16px;
-    right: 16px;
-    bottom: 76px;
+  .toast-list {
     align-items: stretch;
-  }
-  .kv {
-    grid-template-columns: 96px minmax(0, 1fr);
   }
   .srow {
     grid-template-columns: minmax(0, 1fr);
@@ -324,13 +265,8 @@
   }
   .prog > i,
   .toggle::after,
-  .sitem .chev,
   .skip {
     transition: none;
-  }
-  .sk {
-    animation: none;
-    opacity: 0.85;
   }
 }
 :root[data-motion='reduce'] .modal,
@@ -348,8 +284,4 @@
 :root[data-motion='reduce'] .prog > i,
 :root[data-motion='reduce'] .toggle::after {
   transition: none;
-}
-:root[data-motion='reduce'] .sk {
-  animation: none;
-  opacity: 0.85;
 }

@@ -2,6 +2,7 @@ export * from './vocab/task-status';
 export * from './vocab/priority';
 export * from './vocab/label';
 export * from './vocab/role';
+export * from './vocab/theme';
 export * from './permissions';
 export * from './progress';
 export * from './schemas/primitives';

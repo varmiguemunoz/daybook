@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Skeleton } from '../shared/ui/Skeleton';
-import { PageHeader } from '../shared/ui/PageHeader';
-import { SearchField } from '../shared/ui/SearchField';
-import { MONL, TODAY, addDays, formatDate, isoDate, startOfWeek } from '../shared/dates';
-import { CalendarToolbar, type CalendarMode } from '../features/views/components/CalendarToolbar';
-import { CalendarGrid } from '../features/views/components/CalendarGrid';
-import { useTaskView } from '../features/tasks/use-task-view';
-import { NewTaskButton } from '../features/tasks/components/NewTaskButton';
-import { TaskFilters } from '../features/tasks/components/TaskFilters';
+import { Skeleton } from '../modules/core/components/Skeleton';
+import { PageHeader } from '../modules/core/components/PageHeader';
+import { SearchField } from '../modules/core/components/SearchField';
+import { MONL, today, addDays, formatDate, isoDate, startOfWeek } from '../modules/core/utils/dates';
+import { CalendarToolbar, type CalendarMode } from '../modules/views/components/CalendarToolbar';
+import { CalendarGrid } from '../modules/views/components/CalendarGrid';
+import { useTaskView } from '../modules/tasks/hooks/use-task-view';
+import { NewTaskButton } from '../modules/tasks/components/NewTaskButton';
+import { TaskFilters } from '../modules/tasks/components/TaskFilters';
 
 const WEEK_LENGTH = 7;
 
@@ -23,7 +23,7 @@ function rangeLabel(start: Date): string {
 export function CalendarPage() {
   const view = useTaskView('calendar');
   const [mode, setMode] = useState<CalendarMode>('month');
-  const [cursor, setCursor] = useState(TODAY);
+  const [cursor, setCursor] = useState(today);
 
   const shift = (delta: number) =>
     setCursor(current => (mode === 'month' ? new Date(current.getFullYear(), current.getMonth() + delta, 1) : addDays(current, delta * WEEK_LENGTH)));
@@ -36,7 +36,7 @@ export function CalendarPage() {
         label={mode === 'month' ? monthLabel(cursor) : rangeLabel(startOfWeek(cursor))}
         onMode={setMode}
         onShift={shift}
-        onToday={() => setCursor(TODAY)}
+        onToday={() => setCursor(today())}
         tools={
           <>
             <SearchField value={view.query} onChange={view.setQuery} />

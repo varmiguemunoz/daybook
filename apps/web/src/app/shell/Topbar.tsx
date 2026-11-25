@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import type { Member } from '@gr8r/domain';
-import { Icon } from '../../shared/ui/Icon';
-import { Avatar } from '../../shared/ui/Avatar';
-import { useUiStore } from '../../stores/ui-store';
+import type { Member } from '@daybook/domain';
+import { Icon } from '../../modules/core/components/Icon';
+import { Avatar } from '../../modules/core/components/Avatar';
+import { useUiStore } from '../../modules/core/states/ui-store';
 import { PRIMARY_NAV, WORKSPACE_NAV } from './nav-items';
 
 const MOD = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl';
@@ -34,7 +34,7 @@ function Breadcrumbs() {
   );
 }
 
-export function Topbar({ me, unread }: { me?: Member; unread: boolean }) {
+export function Topbar({ me, unread }: { me?: Member; unread: number }) {
   const openPalette = useUiStore(state => state.setCommandPaletteOpen);
 
   return (
@@ -46,9 +46,9 @@ export function Topbar({ me, unread }: { me?: Member; unread: boolean }) {
         <span className="lbltxt">Search or jump to…</span>
         <span className="kbd">{MOD}K</span>
       </button>
-      <Link to="/notifications" className="ibtn" data-tip="Notifications" aria-label="Notifications">
+      <Link to="/notifications" className="ibtn" data-tip="Notifications" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}>
         <Icon name="bell" size={16} />
-        {unread && (
+        {unread > 0 && (
           <span
             style={{
               position: 'absolute',

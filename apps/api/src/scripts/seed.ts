@@ -6,7 +6,7 @@ async function main(): Promise<void> {
   const config = loadDatabaseConfig();
   const repositories = await createMongoRepositories(config.MONGODB_URI);
   await importSeedData();
-  console.log('Seeded MongoDB with the Gr8r Studio workspace.');
+  console.log('Seeded MongoDB with the Daybook Demo workspace.');
   await repositories.close();
 }
 

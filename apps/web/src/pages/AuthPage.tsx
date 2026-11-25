@@ -1,6 +1,6 @@
 import { SignIn, SignUp } from '@clerk/react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { Brand } from '../shared/ui/Brand';
+import { Brand } from '../modules/core/components/Brand';
 
 export function AuthPage() {
   return (

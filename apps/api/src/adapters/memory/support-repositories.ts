@@ -1,4 +1,4 @@
-import type { Activity, Member, Workspace } from '@gr8r/domain';
+import type { Activity, Member, Workspace } from '@daybook/domain';
 import type { ActivityRepository, MemberRepository, WorkspaceRepository } from '../../ports/repositories';
 import type { Collection } from './collection';
 
@@ -35,7 +35,10 @@ export class MemoryMemberRepository implements MemberRepository {
 }
 
 export class MemoryWorkspaceRepository implements WorkspaceRepository {
-  constructor(private readonly items: Collection<Workspace>) {}
+  constructor(
+    private readonly items: Collection<Workspace>,
+    private readonly scoped: readonly Collection<{ id: string; workspaceId: string }>[],
+  ) {}
 
   async findByClerkOrgId(clerkOrgId: string): Promise<Workspace | null> {
     return this.items.findWhere({ clerkOrgId });
@@ -43,6 +46,11 @@ export class MemoryWorkspaceRepository implements WorkspaceRepository {
 
   async upsert(workspace: Workspace, patch: Partial<Workspace>): Promise<Workspace> {
     return this.items.upsert({ clerkOrgId: workspace.clerkOrgId }, workspace, patch);
+  }
+
+  async purge(id: string): Promise<void> {
+    this.scoped.forEach(collection => collection.removeWhere({ workspaceId: id }));
+    this.items.remove(id);
   }
 }
 

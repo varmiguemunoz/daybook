@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
-import { SettingsNav } from '../features/settings/components/SettingsNav';
-import { SettingsBody } from '../features/settings/components/SettingsBody';
+import { SettingsNav } from '../modules/settings/components/SettingsNav';
+import { SettingsBody } from '../modules/settings/components/SettingsBody';
 
 const WIDE_SECTIONS = new Set(['members', 'teams', 'permissions']);
 

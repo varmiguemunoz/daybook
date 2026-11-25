@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { CalendarEvent, Comment, FileRecord, Notification, SavedView, Team } from '@gr8r/domain';
+import type { CalendarEvent, Comment, FileRecord, Notification, SavedView, Team } from '@daybook/domain';
 import { modelFor, toDomain } from './connection';
 import { CommentModel, EventModel, FileModel, NotificationModel, SavedViewModel, TeamModel } from './models/support';
 
@@ -9,7 +9,7 @@ const FileDocument = modelFor(FileModel) as any;
 const EventDocument = modelFor(EventModel) as any;
 const SavedViewDocument = modelFor(SavedViewModel) as any;
 const NotificationDocument = modelFor(NotificationModel) as any;
-const RETURN_NEW = { new: true, lean: true };
+const RETURN_NEW = { returnDocument: 'after', lean: true };
 
 function many<T>(documents: unknown[]): T[] {
   return documents.map(document => toDomain<T>(document) as T);
@@ -99,6 +99,10 @@ export class MongoSavedViewRepository {
     return many<SavedView>(await SavedViewDocument.find(filter).lean());
   }
 
+  async findById(workspaceId: string, id: string): Promise<SavedView | null> {
+    return toDomain<SavedView>(await SavedViewDocument.findOne({ _id: id, workspaceId }).lean());
+  }
+
   async create(view: SavedView): Promise<SavedView> {
     return toDomain<SavedView>(await SavedViewDocument.create({ _id: view.id, ...view })) as SavedView;
   }
@@ -108,9 +112,9 @@ export class MongoSavedViewRepository {
 }
 
 export class MongoNotificationRepository {
-  async listByUser(userId: string, unreadOnly?: boolean): Promise<Notification[]> {
+  async listByUser(userId: string, unreadOnly: boolean, limit: number): Promise<Notification[]> {
     const filter = unreadOnly ? { userId, read: false } : { userId };
-    return many<Notification>(await NotificationDocument.find(filter).sort({ at: -1 }).lean());
+    return many<Notification>(await NotificationDocument.find(filter).sort({ at: -1 }).limit(limit).lean());
   }
 
   async create(notification: Notification): Promise<Notification> {

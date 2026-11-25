@@ -1,7 +1,7 @@
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../features/auth/AuthProvider';
-import { ErrorBoundary } from '../shared/ui/ErrorBoundary';
-import { ToastHost } from '../shared/ui/Toast';
+import { AuthProvider } from '../modules/auth/components/AuthProvider';
+import { ErrorBoundary } from '../modules/core/components/ErrorBoundary';
+import { ToastHost } from '../modules/core/components/Toast';
 import { AppRoutes } from './router';
 
 export function App() {

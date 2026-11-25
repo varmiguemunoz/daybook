@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Skeleton } from '../shared/ui/Skeleton';
-import { PageHeader } from '../shared/ui/PageHeader';
-import type { GroupBy } from '../features/views/view-model';
-import { ViewModeSwitch } from '../features/views/components/ViewModeSwitch';
-import { ViewToolbar } from '../features/views/components/ViewToolbar';
-import { useTaskView } from '../features/tasks/use-task-view';
-import { useTaskSelection } from '../features/tasks/use-task-selection';
-import { NewTaskButton } from '../features/tasks/components/NewTaskButton';
-import { TaskFilters } from '../features/tasks/components/TaskFilters';
-import { TaskTable } from '../features/tasks/components/TaskTable';
-import { BulkActionsBar } from '../features/tasks/components/BulkActionsBar';
+import { Skeleton } from '../modules/core/components/Skeleton';
+import { PageHeader } from '../modules/core/components/PageHeader';
+import type { GroupBy } from '../modules/views/lib/view-model';
+import { ViewModeSwitch } from '../modules/views/components/ViewModeSwitch';
+import { ViewToolbar } from '../modules/views/components/ViewToolbar';
+import { useTaskView } from '../modules/tasks/hooks/use-task-view';
+import { useTaskSelection } from '../modules/tasks/hooks/use-task-selection';
+import { NewTaskButton } from '../modules/tasks/components/NewTaskButton';
+import { TaskFilters } from '../modules/tasks/components/TaskFilters';
+import { TaskTable } from '../modules/tasks/components/TaskTable';
+import { BulkActionsBar } from '../modules/tasks/components/BulkActionsBar';
 
 const GROUP_LABELS: Record<GroupBy, string> = { status: 'Status', priority: 'Priority', assignee: 'Assignee', none: 'None' };
 const GROUP_ORDER: GroupBy[] = ['status', 'priority', 'assignee', 'none'];

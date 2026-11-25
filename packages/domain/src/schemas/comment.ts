@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { idSchema, nonEmptyText, timestampSchema } from './primitives';
+import { idSchema, timestampSchema } from './primitives';
+
+const commentBody = z.string().trim().min(1).max(4_000);
+const emoji = z
+  .string()
+  .max(8)
+  .regex(/^\p{Extended_Pictographic}/u);
 
 export const reactionSchema = z.record(z.string().max(8), z.array(idSchema));
 
@@ -8,7 +14,7 @@ export const commentSchema = z.object({
   workspaceId: idSchema,
   taskId: idSchema,
   authorId: idSchema,
-  body: nonEmptyText.max(4_000),
+  body: commentBody,
   reactions: reactionSchema.default({}),
   createdAt: timestampSchema,
   editedAt: timestampSchema.nullable().default(null),
@@ -16,9 +22,12 @@ export const commentSchema = z.object({
 
 export type Comment = z.infer<typeof commentSchema>;
 
-export const createCommentInputSchema = z.object({
-  taskId: idSchema,
-  body: nonEmptyText.max(4_000),
-});
+export const createCommentInputSchema = z.object({ body: commentBody });
+
+export const updateCommentInputSchema = z.object({ body: commentBody });
+
+export const reactionInputSchema = z.object({ emoji });
 
 export type CreateCommentInput = z.infer<typeof createCommentInputSchema>;
+export type UpdateCommentInput = z.infer<typeof updateCommentInputSchema>;
+export type ReactionInput = z.infer<typeof reactionInputSchema>;

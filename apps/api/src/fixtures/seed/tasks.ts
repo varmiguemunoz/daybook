@@ -1,4 +1,4 @@
-import type { Task } from '@gr8r/domain';
+import type { Task } from '@daybook/domain';
 import { WORKSPACE_ID, isoDay, hoursAgo } from './constants';
 
 /* eslint-disable max-lines */

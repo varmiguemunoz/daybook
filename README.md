@@ -1,24 +1,25 @@
-# Gr8r Studio
+# Daybook
 
-Internal project management workspace. One product, three deliverables: a web client, an API, and
+Personal tasks and notes in one place, grouped by organisation. One product, three deliverables: a web client, an API, and
 a desktop shell that wraps the same client.
 
 ## Layout
 
-| Path              | What it is                                                                          |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| `apps/legacy`     | The running vanilla JS client. Source of truth for behaviour and visual parity.     |
-| `apps/web`        | React 19 + TypeScript client. Shell and routes land in Phase 4.                     |
-| `apps/api`        | Hono API. Persistence and Clerk land in Phase 3.                                    |
-| `packages/domain` | Types, Zod schemas, permissions and vocabularies shared by every app (Phase 2).     |
-| `docs/`           | `refactor-plan.md` (phases and decisions), `screen-inventory.md` (parity baseline). |
-| `tests/visual`    | Playwright harness that captures every legacy screen.                               |
+| Path              | What it is                                                            |
+| ----------------- | --------------------------------------------------------------------- |
+| `apps/web`        | React 19 + Vite client, also packaged with Tauri (`src-tauri`).       |
+| `apps/api`        | Hono API on Node with Clerk auth and memory or MongoDB persistence.   |
+| `packages/domain` | Types, Zod schemas, permissions and vocabularies shared by every app. |
+| `docs/`           | Plans and the quality audit (`quality-audit.md`).                     |
+
+The web client follows a screaming architecture: `src/pages` holds one file per route and
+`src/modules/<domain>/{components, hooks, lib, services, states}` holds each domain. Shared building blocks
+live in `src/modules/core`.
 
 ## Commands
 
 ```bash
 npm install             # one workspace install
-npm run dev             # legacy client on http://localhost:5173
 npm run dev:web         # React client on http://localhost:5175
 npm run dev:api         # Hono API on http://localhost:3001
 npm run build           # build every workspace

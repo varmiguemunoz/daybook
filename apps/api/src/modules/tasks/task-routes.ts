@@ -1,9 +1,8 @@
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
-import { bulkTaskIdsSchema, bulkTaskPatchSchema, createTaskInputSchema, taskQuerySchema, updateTaskInputSchema, type TaskQuery } from '@gr8r/domain';
+import { bulkTaskIdsSchema, bulkTaskPatchSchema, createTaskInputSchema, taskQuerySchema, updateTaskInputSchema, type TaskQuery } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
-import { requestContext } from '../../http/context';
-import { requirePermission } from '../../http/actor';
+import { permit } from '../../http/actor';
 import { parseBody, parseQuery, readJson } from '../../http/validate';
 import { createTask, deleteTask, getTask, listTasks, updateTask } from './task-service';
 import { deleteTasks, updateTasks } from './task-bulk-service';
@@ -25,16 +24,14 @@ function parseTaskQuery(context: Context): TaskQuery {
 }
 
 function registerBulkRoutes(routes: Hono, repositories: Repositories): void {
-  routes.patch('/', async context => {
-    const { workspace, member } = await requestContext(repositories, context);
-    requirePermission(member, 'task:write');
+  routes.patch('/', permit('task:write'), async context => {
+    const { workspace, member } = context.get('scope');
     const { ids, patch } = parseBody(bulkUpdateSchema, await readJson(context));
     return context.json(await updateTasks(repositories, workspace, ids, patch, member.id));
   });
 
-  routes.delete('/', async context => {
-    const { workspace, member } = await requestContext(repositories, context);
-    requirePermission(member, 'task:write');
+  routes.delete('/', permit('task:write'), async context => {
+    const { workspace, member } = context.get('scope');
     const { ids } = parseBody(bulkDeleteSchema, await readJson(context));
     return context.json({ deleted: await deleteTasks(repositories, workspace, ids, member.id) });
   });
@@ -44,32 +41,29 @@ export function taskRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
 
   routes.get('/', async context => {
-    const { workspace } = await requestContext(repositories, context);
+    const { workspace } = context.get('scope');
     return context.json(await listTasks(repositories, workspace.id, parseTaskQuery(context)));
   });
 
   routes.get('/:id', async context => {
-    const { workspace } = await requestContext(repositories, context);
+    const { workspace } = context.get('scope');
     return context.json(await getTask(repositories, workspace.id, context.req.param('id')));
   });
 
-  routes.post('/', async context => {
-    const { workspace, member } = await requestContext(repositories, context);
-    requirePermission(member, 'task:write');
+  routes.post('/', permit('task:write'), async context => {
+    const { workspace, member } = context.get('scope');
     const input = parseBody(createTaskInputSchema, await readJson(context));
     return context.json(await createTask(repositories, workspace, input, member.id), 201);
   });
 
-  routes.patch('/:id', async context => {
-    const { workspace, member } = await requestContext(repositories, context);
-    requirePermission(member, 'task:write');
+  routes.patch('/:id', permit('task:write'), async context => {
+    const { workspace, member } = context.get('scope');
     const input = parseBody(updateTaskInputSchema, await readJson(context));
     return context.json(await updateTask(repositories, workspace, context.req.param('id'), input, member.id));
   });
 
-  routes.delete('/:id', async context => {
-    const { workspace, member } = await requestContext(repositories, context);
-    requirePermission(member, 'task:write');
+  routes.delete('/:id', permit('task:write'), async context => {
+    const { workspace, member } = context.get('scope');
     await deleteTask(repositories, workspace, context.req.param('id'), member.id);
     return context.body(null, 204);
   });

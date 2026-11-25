@@ -1,51 +1,41 @@
-import { Hono, type Context } from 'hono';
-import { createTeamInputSchema, updateTeamInputSchema } from '@gr8r/domain';
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { createTeamInputSchema, idSchema, updateTeamInputSchema } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
-import { requestContext } from '../../http/context';
-import { requirePermission } from '../../http/actor';
+import { permit } from '../../http/actor';
 import { parseBody, readJson } from '../../http/validate';
 import { addMemberToTeam, createTeam, deleteTeam, getTeam, listTeams, removeMemberFromTeam, updateTeam } from './team-service';
 
-async function manager(repositories: Repositories, context: Context) {
-  const scope = await requestContext(repositories, context);
-  requirePermission(scope.member, 'workspace:manage');
-  return scope;
-}
+const addMemberSchema = z.object({ memberId: idSchema });
+const manage = permit('workspace:manage');
 
 function registerMemberRoutes(routes: Hono, repositories: Repositories): void {
-  routes.post('/:id/members', async context => {
-    const { workspace } = await manager(repositories, context);
-    const { memberId } = (await readJson(context)) as { memberId: string };
+  routes.post('/:id/members', manage, async context => {
+    const { workspace } = context.get('scope');
+    const { memberId } = parseBody(addMemberSchema, await readJson(context));
     return context.json(await addMemberToTeam(repositories, workspace.id, context.req.param('id'), memberId));
   });
-  routes.delete('/:id/members/:memberId', async context => {
-    const { workspace } = await manager(repositories, context);
+  routes.delete('/:id/members/:memberId', manage, async context => {
+    const { workspace } = context.get('scope');
     return context.json(await removeMemberFromTeam(repositories, workspace.id, context.req.param('id'), context.req.param('memberId')));
   });
 }
 
 export function teamRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
-  routes.get('/', async context => {
-    const { workspace } = await requestContext(repositories, context);
-    return context.json(await listTeams(repositories, workspace.id));
-  });
-  routes.get('/:id', async context => {
-    const { workspace } = await requestContext(repositories, context);
-    return context.json(await getTeam(repositories, workspace.id, context.req.param('id')));
-  });
-  routes.post('/', async context => {
-    const { workspace, member } = await manager(repositories, context);
+  routes.get('/', async context => context.json(await listTeams(repositories, context.get('scope').workspace.id)));
+  routes.get('/:id', async context => context.json(await getTeam(repositories, context.get('scope').workspace.id, context.req.param('id'))));
+  routes.post('/', manage, async context => {
+    const { workspace, member } = context.get('scope');
     const input = parseBody(createTeamInputSchema, await readJson(context));
     return context.json(await createTeam(repositories, workspace.id, input, member.id), 201);
   });
-  routes.patch('/:id', async context => {
-    const { workspace } = await manager(repositories, context);
+  routes.patch('/:id', manage, async context => {
     const input = parseBody(updateTeamInputSchema, await readJson(context));
-    return context.json(await updateTeam(repositories, workspace.id, context.req.param('id'), input));
+    return context.json(await updateTeam(repositories, context.get('scope').workspace.id, context.req.param('id'), input));
   });
-  routes.delete('/:id', async context => {
-    const { workspace, member } = await manager(repositories, context);
+  routes.delete('/:id', manage, async context => {
+    const { workspace, member } = context.get('scope');
     await deleteTeam(repositories, workspace.id, context.req.param('id'), member.id);
     return context.body(null, 204);
   });

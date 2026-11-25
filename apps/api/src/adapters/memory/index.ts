@@ -1,4 +1,4 @@
-import type { Activity, CalendarEvent, Comment, FileRecord, Member, Notification, SavedView, Task, Team, Workspace } from '@gr8r/domain';
+import type { Activity, CalendarEvent, Comment, FileRecord, Member, Notification, SavedView, Task, Team, Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { Collection } from './collection';
 import { MemoryTaskRepository } from './task-repository';
@@ -21,18 +21,28 @@ export interface SeedData {
 }
 
 export function createMemoryRepositories(seed: SeedData = {}): Repositories {
-  const workspace: Workspace = seed.workspace ?? defaultWorkspace;
+  const collections = {
+    members: new Collection<Member>(seed.members ?? members),
+    tasks: new Collection<Task>(seed.tasks ?? tasks),
+    activity: new Collection<Activity>(seed.activity ?? []),
+    teams: new Collection<Team>([]),
+    comments: new Collection<Comment>([]),
+    files: new Collection<FileRecord>([]),
+    events: new Collection<CalendarEvent>([]),
+    views: new Collection<SavedView>([]),
+    notifications: new Collection<Notification>([]),
+  };
 
   return {
-    workspaces: new MemoryWorkspaceRepository(new Collection<Workspace>([workspace])),
-    members: new MemoryMemberRepository(new Collection<Member>(seed.members ?? members)),
-    tasks: new MemoryTaskRepository(new Collection<Task>(seed.tasks ?? tasks)),
-    activity: new MemoryActivityRepository(new Collection<Activity>(seed.activity ?? [])),
-    teams: new MemoryTeamRepository(new Collection<Team>([])),
-    comments: new MemoryCommentRepository(new Collection<Comment>([])),
-    files: new MemoryFileRepository(new Collection<FileRecord>([])),
-    events: new MemoryCalendarEventRepository(new Collection<CalendarEvent>([])),
-    views: new MemorySavedViewRepository(new Collection<SavedView>([])),
-    notifications: new MemoryNotificationRepository(new Collection<Notification>([])),
+    workspaces: new MemoryWorkspaceRepository(new Collection<Workspace>([seed.workspace ?? defaultWorkspace]), Object.values(collections)),
+    members: new MemoryMemberRepository(collections.members),
+    tasks: new MemoryTaskRepository(collections.tasks),
+    activity: new MemoryActivityRepository(collections.activity),
+    teams: new MemoryTeamRepository(collections.teams),
+    comments: new MemoryCommentRepository(collections.comments),
+    files: new MemoryFileRepository(collections.files),
+    events: new MemoryCalendarEventRepository(collections.events),
+    views: new MemorySavedViewRepository(collections.views),
+    notifications: new MemoryNotificationRepository(collections.notifications),
   };
 }

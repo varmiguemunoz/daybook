@@ -110,14 +110,6 @@ textarea,
 .sp {
   flex: 1;
 }
-.sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
 kbd,
 .kbd {
   font-family: var(--mono);
@@ -150,12 +142,4 @@ kbd,
 }
 ::-webkit-scrollbar-track {
   background: transparent;
-}
-.only-m {
-  display: none;
-}
-@media (max-width: 640px) {
-  .only-m {
-    display: block;
-  }
 }

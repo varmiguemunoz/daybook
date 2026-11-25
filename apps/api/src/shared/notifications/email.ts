@@ -1,32 +1,24 @@
 import nodemailer, { type Transporter } from 'nodemailer';
+import type { Config } from '../../config';
 
 let transporter: Transporter | null = null;
+let sender = '';
 
-function configured(): boolean {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-}
-
-export function emailConfigured(): boolean {
-  return configured();
-}
-
-function getTransporter(): Transporter | null {
-  if (!configured()) return null;
-  if (transporter) return transporter;
+export function configureEmail(config: Config): void {
+  if (!config.SMTP_HOST || !config.SMTP_USER || !config.SMTP_PASS) return;
+  sender = config.SMTP_FROM ?? config.SMTP_USER;
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    host: config.SMTP_HOST,
+    port: config.SMTP_PORT,
+    secure: config.SMTP_SECURE,
+    auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
   });
-  return transporter;
 }
 
-export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
-  const t = getTransporter();
-  if (!t) return false;
+export async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
+  if (!transporter) return false;
   try {
-    await t.sendMail({ from: process.env.SMTP_FROM ?? process.env.SMTP_USER, to, subject, html });
+    await transporter.sendMail({ from: sender, to, subject, text });
     return true;
   } catch (error) {
     console.error('[email] send failed', error);

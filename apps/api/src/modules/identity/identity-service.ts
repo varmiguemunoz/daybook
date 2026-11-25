@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { memberSchema, workspaceSchema, type Member, type Role, type Workspace } from '@gr8r/domain';
+import { memberSchema, workspaceSchema, type Member, type Role, type Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 
 const ROLE_BY_CLERK_ROLE: Record<string, Role> = { 'org:admin': 'admin', 'org:member': 'member' };

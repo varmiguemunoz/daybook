@@ -8,7 +8,7 @@ const signedInAs: MiddlewareHandler = async (context, next) => {
   const userId = context.req.header('x-test-user');
   if (!userId) throw unauthorized();
   const orgRole = userId === 'user_m1' ? 'org:admin' : 'org:member';
-  context.set('identity', { userId, orgId: 'org_seed', orgRole, orgName: 'Gr8r Studio', name: 'Tanjim Islam', email: 'hello@gr8rstudio.com' });
+  context.set('identity', { userId, orgId: 'org_seed', orgRole, orgName: 'Daybook Demo', name: 'Tanjim Islam', email: 'hello@daybook.test' });
   await next();
 };
 
@@ -31,7 +31,7 @@ describe('GET /health', () => {
     const response = await app.request('/health');
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ status: 'ok', service: 'gr8r-api' });
+    await expect(response.json()).resolves.toEqual({ status: 'ok', service: 'daybook-api' });
   });
 });
 

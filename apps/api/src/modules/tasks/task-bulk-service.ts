@@ -1,4 +1,4 @@
-import type { BulkTaskPatch, Task, Workspace } from '@gr8r/domain';
+import type { BulkTaskPatch, Task, Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { AppError } from '../../http/errors';
 import { deleteTask, updateTask } from './task-service';

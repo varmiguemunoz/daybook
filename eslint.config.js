@@ -13,7 +13,17 @@ const configFiles = ['**/*.config.{js,ts}', 'eslint.config.js', 'tests/**/*.ts']
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/', '**/node_modules/', '**/playwright-report/', '**/test-results/', 'tests/visual/baseline/'],
+    ignores: [
+      '**/dist/',
+      '**/node_modules/',
+      '**/playwright-report/',
+      '**/test-results/',
+      'tests/visual/baseline/',
+      '.agents/',
+      '.claude/',
+      '.opencode/',
+      '**/src-tauri/target/',
+    ],
   },
   js.configs.recommended,
   {

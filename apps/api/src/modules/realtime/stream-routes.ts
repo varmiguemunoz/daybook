@@ -1,33 +1,37 @@
 import { Hono } from 'hono';
-import { streamSSE } from 'hono/streaming';
-import type { Repositories } from '../../ports/repositories';
-import { requestContext } from '../../http/context';
-import { subscribe } from '../../shared/events/bus';
+import { streamSSE, type SSEStreamingApi } from 'hono/streaming';
+import type { Member } from '@daybook/domain';
+import { subscribe, type BusEvent } from '../../shared/events/bus';
 
-export function streamRoutes(repositories: Repositories): Hono {
+const HEARTBEAT_MS = 25_000;
+
+function endsAccess(event: BusEvent, member: Member): boolean {
+  return event.type === 'workspace.deleted' || (event.type === 'member.removed' && event.payload === member.id);
+}
+
+function relay(stream: SSEStreamingApi, workspaceId: string, member: Member): Promise<void> {
+  return new Promise(resolve => {
+    const unsubscribe = subscribe(workspaceId, event => {
+      if (endsAccess(event, member)) return close();
+      stream.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(close);
+    });
+    const heartbeat = setInterval(() => stream.writeSSE({ data: 'ping', event: 'heartbeat' }).catch(close), HEARTBEAT_MS);
+    function close(): void {
+      clearInterval(heartbeat);
+      unsubscribe();
+      resolve();
+    }
+    stream.onAbort(close);
+    stream.writeSSE({ data: JSON.stringify({ type: 'connected', workspaceId }), event: 'connected' }).catch(close);
+  });
+}
+
+export function streamRoutes(): Hono {
   const routes = new Hono();
 
   routes.get('/', async context => {
-    const { workspace } = await requestContext(repositories, context);
-
-    return streamSSE(context, async stream => {
-      const unsubscribe = subscribe(workspace.id, payload => {
-        stream.writeSSE({ data: JSON.stringify(payload), event: (payload as { type: string }).type });
-      });
-
-      await stream.writeSSE({ data: JSON.stringify({ type: 'connected', workspaceId: workspace.id }), event: 'connected' });
-
-      const heartbeat = setInterval(() => {
-        stream.writeSSE({ data: 'ping', event: 'heartbeat' }).catch(() => undefined);
-      }, 25000);
-
-      stream.onAbort(() => {
-        clearInterval(heartbeat);
-        unsubscribe();
-      });
-
-      await new Promise(() => undefined);
-    });
+    const { workspace, member } = context.get('scope');
+    return streamSSE(context, stream => relay(stream, workspace.id, member));
   });
 
   return routes;
