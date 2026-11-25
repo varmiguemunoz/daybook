@@ -10,8 +10,8 @@ export function commentRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
 
   routes.get('/tasks/:taskId', async context => {
-    await requestContext(repositories, context);
-    return context.json(await listComments(repositories, context.req.param('taskId')));
+    const { workspace } = await requestContext(repositories, context);
+    return context.json(await listComments(repositories, workspace.id, context.req.param('taskId')));
   });
 
   routes.post('/tasks/:taskId', async context => {
@@ -22,25 +22,25 @@ export function commentRoutes(repositories: Repositories): Hono {
   });
 
   routes.patch('/:id', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'comment:write');
     const body = await readJson(context);
-    return context.json(await updateComment(repositories, context.req.param('id'), (body as { body: string }).body));
+    return context.json(await updateComment(repositories, workspace.id, context.req.param('id'), (body as { body: string }).body));
   });
 
   routes.delete('/:id', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'comment:write');
-    await deleteComment(repositories, context.req.param('id'));
+    await deleteComment(repositories, workspace.id, context.req.param('id'));
     return context.body(null, 204);
   });
 
   routes.post('/:id/reactions', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'comment:write');
     const body = await readJson(context);
     const emoji = (body as { emoji: string }).emoji;
-    return context.json(await toggleReaction(repositories, context.req.param('id'), member.id, emoji));
+    return context.json(await toggleReaction(repositories, workspace.id, context.req.param('id'), member.id, emoji));
   });
 
   return routes;

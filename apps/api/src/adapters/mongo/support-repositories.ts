@@ -1,16 +1,11 @@
-import type { Activity, Invitation, Member, Workspace } from '@gr8r/domain';
-import { modelFor, toDomain } from './connection';
-import {
-  ActivityModel,
-  InvitationModel,
-  MemberModel,
-  WorkspaceModel,
-} from './models/support';
+import type { Activity, Member, Workspace } from '@gr8r/domain';
+import { modelFor, toDomain, upsertUpdate } from './connection';
+import { ActivityModel, MemberModel, WorkspaceModel } from './models/support';
 
 const WorkspaceDocument = modelFor(WorkspaceModel);
 const MemberDocument = modelFor(MemberModel);
 const ActivityDocument = modelFor(ActivityModel);
-const InvitationDocument = modelFor(InvitationModel);
+const UPSERT = { upsert: true, new: true, lean: true };
 
 export class MongoMemberRepository {
   async listByWorkspace(workspaceId: string): Promise<Member[]> {
@@ -18,39 +13,36 @@ export class MongoMemberRepository {
     return documents.map((document: unknown) => toDomain<Member>(document) as Member);
   }
 
-  async findById(id: string): Promise<Member | null> {
-    return toDomain<Member>(await MemberDocument.findById(id).lean());
+  async findById(workspaceId: string, id: string): Promise<Member | null> {
+    return toDomain<Member>(await MemberDocument.findOne({ _id: id, workspaceId }).lean());
   }
 
-  async create(member: Member): Promise<Member> {
-    return toDomain<Member>(await MemberDocument.create({ _id: member.id, ...member })) as Member;
+  async findByClerkUserId(workspaceId: string, clerkUserId: string): Promise<Member | null> {
+    return toDomain<Member>(await MemberDocument.findOne({ workspaceId, clerkUserId }).lean());
   }
 
-  async update(id: string, patch: Partial<Member>): Promise<Member | null> {
-    return toDomain<Member>(await MemberDocument.findByIdAndUpdate(id, { $set: patch }, { new: true, lean: true }));
+  async upsert(member: Member, patch: Partial<Member>): Promise<Member> {
+    const filter = { workspaceId: member.workspaceId, clerkUserId: member.clerkUserId };
+    return toDomain<Member>(await MemberDocument.findOneAndUpdate(filter, upsertUpdate(member, patch), UPSERT)) as Member;
   }
 
-  async remove(id: string): Promise<boolean> {
-    const result = await MemberDocument.deleteOne({ _id: id });
-    return result.deletedCount > 0;
+  async update(workspaceId: string, id: string, patch: Partial<Member>): Promise<Member | null> {
+    return toDomain<Member>(await MemberDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { new: true, lean: true }));
+  }
+
+  async updateByClerkUserId(clerkUserId: string, patch: Partial<Member>): Promise<void> {
+    await MemberDocument.updateMany({ clerkUserId }, { $set: patch });
   }
 }
 
 export class MongoWorkspaceRepository {
-  async findFirst(): Promise<Workspace | null> {
-    return toDomain<Workspace>(await WorkspaceDocument.findOne().sort({ createdAt: 1 }).lean());
+  async findByClerkOrgId(clerkOrgId: string): Promise<Workspace | null> {
+    return toDomain<Workspace>(await WorkspaceDocument.findOne({ clerkOrgId }).lean());
   }
 
-  async findById(id: string): Promise<Workspace | null> {
-    return toDomain<Workspace>(await WorkspaceDocument.findById(id).lean());
-  }
-
-  async create(workspace: Workspace): Promise<Workspace> {
-    return toDomain<Workspace>(await WorkspaceDocument.create({ _id: workspace.id, ...workspace })) as Workspace;
-  }
-
-  async update(id: string, patch: Partial<Workspace>): Promise<Workspace | null> {
-    return toDomain<Workspace>(await WorkspaceDocument.findByIdAndUpdate(id, { $set: patch }, { new: true, lean: true }));
+  async upsert(workspace: Workspace, patch: Partial<Workspace>): Promise<Workspace> {
+    const filter = { clerkOrgId: workspace.clerkOrgId };
+    return toDomain<Workspace>(await WorkspaceDocument.findOneAndUpdate(filter, upsertUpdate(workspace, patch), UPSERT)) as Workspace;
   }
 }
 
@@ -64,23 +56,3 @@ export class MongoActivityRepository {
     await ActivityDocument.create({ _id: activity.id, ...activity });
   }
 }
-
-export class MongoInvitationRepository {
-  async listByWorkspace(workspaceId: string): Promise<Invitation[]> {
-    const documents = await InvitationDocument.find({ workspaceId }).lean();
-    return documents.map((document: unknown) => toDomain<Invitation>(document) as Invitation);
-  }
-
-  async findByToken(token: string): Promise<Invitation | null> {
-    return toDomain<Invitation>(await InvitationDocument.findOne({ token }).lean());
-  }
-
-  async create(invitation: Invitation): Promise<Invitation> {
-    return toDomain<Invitation>(await InvitationDocument.create({ _id: invitation.id, ...invitation })) as Invitation;
-  }
-
-  async markAccepted(id: string, at: number): Promise<Invitation | null> {
-    return toDomain<Invitation>(await InvitationDocument.findByIdAndUpdate(id, { $set: { acceptedAt: at } }, { new: true, lean: true }));
-  }
-}
-

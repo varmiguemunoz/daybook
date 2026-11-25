@@ -31,13 +31,7 @@ export function DatePicker({ value, onChange, label = 'Due date' }: Props) {
 
   return (
     <>
-      <button
-        ref={setAnchor}
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={() => setOpen(current => !current)}
-        aria-label={label}
-      >
+      <button ref={setAnchor} type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen(current => !current)} aria-label={label}>
         <Icon name="calendar" size={13} />
         {value || 'Set date'}
       </button>

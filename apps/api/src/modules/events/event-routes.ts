@@ -27,16 +27,16 @@ export function eventRoutes(repositories: Repositories): Hono {
   });
 
   routes.patch('/:id', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'task:write');
     const input = parseBody(updateEventSchema, await readJson(context));
-    return context.json(await updateEvent(repositories, context.req.param('id'), input));
+    return context.json(await updateEvent(repositories, workspace.id, context.req.param('id'), input));
   });
 
   routes.delete('/:id', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'task:write');
-    await deleteEvent(repositories, context.req.param('id'));
+    await deleteEvent(repositories, workspace.id, context.req.param('id'));
     return context.body(null, 204);
   });
 

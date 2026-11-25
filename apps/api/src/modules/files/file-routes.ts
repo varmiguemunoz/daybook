@@ -22,7 +22,7 @@ const confirmSchema = z.object({
   mimeType: z.string().max(128).default('application/octet-stream'),
 });
 
-function localRoutes(): Hono {
+function localRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
   routes.post('/local-upload/:fileId', async context => {
     const fileId = context.req.param('fileId');
@@ -32,6 +32,8 @@ function localRoutes(): Hono {
     return context.body(null, 204);
   });
   routes.get('/local/:fileId', async context => {
+    const { workspace } = await requestContext(repositories, context);
+    await getFile(repositories, workspace.id, context.req.param('fileId'));
     const file = getLocalFile(context.req.param('fileId'));
     if (!file) return context.json({ error: { message: 'Not found' } }, 404);
     return context.body(new Uint8Array(file.data), 200, { 'content-type': file.mimeType });
@@ -41,7 +43,7 @@ function localRoutes(): Hono {
 
 export function fileRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
-  routes.route('/', localRoutes());
+  routes.route('/', localRoutes(repositories));
 
   routes.post('/presign', async context => {
     const { workspace, member } = await requestContext(repositories, context);
@@ -66,15 +68,15 @@ export function fileRoutes(repositories: Repositories): Hono {
   });
 
   routes.get('/:id/download', async context => {
-    await requestContext(repositories, context);
-    const file = await getFile(repositories, context.req.param('id'));
+    const { workspace } = await requestContext(repositories, context);
+    const file = await getFile(repositories, workspace.id, context.req.param('id'));
     return context.json({ url: await downloadUrl(file) });
   });
 
   routes.delete('/:id', async context => {
-    const { member } = await requestContext(repositories, context);
+    const { workspace, member } = await requestContext(repositories, context);
     requirePermission(member, 'task:write');
-    await deleteFile(repositories, context.req.param('id'));
+    await deleteFile(repositories, workspace.id, context.req.param('id'));
     return context.body(null, 204);
   });
 

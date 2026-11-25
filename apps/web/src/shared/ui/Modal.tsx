@@ -1,18 +1,21 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   title: string;
+  centered?: boolean;
   children: ReactNode;
 }
 
-export function Modal({ open, onClose, title, children }: Props) {
+export function Modal({ open, onClose, title, centered = false, children }: Props) {
+  const titleId = useId();
+
   useEffect(() => {
-    if (!open) return;
+    if (!open || !onClose) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') onClose?.();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -21,13 +24,15 @@ export function Modal({ open, onClose, title, children }: Props) {
   if (!open) return null;
 
   return createPortal(
-    <div className="modal-wrap" onClick={onClose}>
-      <div className="modal" onClick={event => event.stopPropagation()}>
+    <div className={`modal-wrap ${centered ? 'center' : ''}`.trim()} onClick={onClose}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={event => event.stopPropagation()}>
         <div className="modal-h">
-          <h2>{title}</h2>
-          <button className="ibtn" type="button" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <h2 id={titleId}>{title}</h2>
+          {onClose && (
+            <button className="ibtn" type="button" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          )}
         </div>
         <div className="modal-b">{children}</div>
       </div>

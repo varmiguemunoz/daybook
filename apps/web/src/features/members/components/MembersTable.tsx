@@ -3,7 +3,7 @@ import { ROLE_LABELS, ROLES } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
 import { Avatar } from '../../../shared/ui/Avatar';
 import { timeAgo } from '../../../shared/dates';
-import { useChangeRole, useDeactivateMember } from '../queries';
+import { useCanManageOrganization, useChangeRole, useRemoveMember } from '../queries';
 
 const TEAM_NAMES: Record<string, string> = {
   design: 'Design',
@@ -30,15 +30,16 @@ function StatusBadge({ status }: { status: Member['status'] }) {
   );
 }
 
-function RoleSelect({ member }: { member: Member }) {
-  const changeRole = useChangeRole(member.id);
+function RoleSelect({ member, isMe }: { member: Member; isMe: boolean }) {
+  const changeRole = useChangeRole(member);
+  const canManage = useCanManageOrganization();
   return (
     <select
       className="select"
       value={member.role}
       onChange={event => changeRole.mutate(event.target.value as Member['role'])}
       aria-label="Role"
-      disabled={member.role === 'owner' || changeRole.isPending}
+      disabled={!canManage || isMe || changeRole.isPending}
     >
       {ROLES.map(role => (
         <option key={role} value={role}>
@@ -49,20 +50,43 @@ function RoleSelect({ member }: { member: Member }) {
   );
 }
 
-function DeactivateButton({ member }: { member: Member }) {
-  const deactivate = useDeactivateMember(member.id);
+function RemoveButton({ member, isMe }: { member: Member; isMe: boolean }) {
+  const remove = useRemoveMember(member);
+  const canManage = useCanManageOrganization();
   return (
     <button
       className="ibtn ibtn-sm"
       type="button"
-      aria-label="Member options"
-      disabled={deactivate.isPending}
+      aria-label={`Remove ${member.name}`}
+      disabled={!canManage || isMe || remove.isPending}
       onClick={() => {
-        if (window.confirm(`Deactivate ${member.name}?`)) deactivate.mutate();
+        if (window.confirm(`Remove ${member.name} from this organization?`)) remove.mutate();
       }}
     >
       <Icon name="ellipsis" size={14} />
     </button>
+  );
+}
+
+function MemberIdentity({ member, isMe }: { member: Member; isMe: boolean }) {
+  return (
+    <span className="row" style={{ gap: 10, textAlign: 'left' }}>
+      <Avatar member={member} className="md" tip={false} />
+      <span className="col">
+        <b style={{ fontWeight: 500 }}>
+          {member.name}
+          {isMe && (
+            <span className="faint" style={{ fontWeight: 400 }}>
+              {' '}
+              (you)
+            </span>
+          )}
+        </b>
+        <span className="faint" style={{ fontSize: 12 }}>
+          {member.email}
+        </span>
+      </span>
+    </span>
   );
 }
 
@@ -78,21 +102,10 @@ function MemberRow({ member, tasks, meId }: RowProps) {
   return (
     <tr>
       <td style={{ paddingLeft: 14 }}>
-        <span className="row" style={{ gap: 10, textAlign: 'left' }}>
-          <Avatar member={member} className="md" tip={false} />
-          <span className="col">
-            <b style={{ fontWeight: 500 }}>
-              {member.name}
-              {member.id === meId && <span className="faint" style={{ fontWeight: 400 }}> (you)</span>}
-            </b>
-            <span className="faint" style={{ fontSize: 12 }}>
-              {member.email}
-            </span>
-          </span>
-        </span>
+        <MemberIdentity member={member} isMe={member.id === meId} />
       </td>
       <td style={{ textAlign: 'left' }}>
-        <RoleSelect member={member} />
+        <RoleSelect member={member} isMe={member.id === meId} />
       </td>
       <td style={{ textAlign: 'left' }}>
         <span className="row">{member.teamId ? (TEAM_NAMES[member.teamId] ?? member.teamId) : '—'}</span>
@@ -105,7 +118,7 @@ function MemberRow({ member, tasks, meId }: RowProps) {
         <StatusBadge status={member.status} />
       </td>
       <td>
-        <DeactivateButton member={member} />
+        <RemoveButton member={member} isMe={member.id === meId} />
       </td>
     </tr>
   );

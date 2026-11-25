@@ -4,7 +4,15 @@ import { useBootstrap } from '../../workspace/queries';
 import { useUpdateMember } from '../../members/queries';
 import { ThemeCards, DensityRow } from './ThemeCards';
 
-const DEFAULTS = { accent: 'indigo' as const, weekStart: 1, dateFormat: 'MMM d', language: 'en', timezone: 'UTC', motion: 'system' as const, homeRoute: 'home' };
+const DEFAULTS = {
+  accent: 'indigo' as const,
+  weekStart: 1,
+  dateFormat: 'MMM d',
+  language: 'en',
+  timezone: 'UTC',
+  motion: 'system' as const,
+  homeRoute: 'home',
+};
 
 function buildPreferences(me: { preferences?: Partial<typeof DEFAULTS> }, theme: 'light' | 'dark' | 'system', density: 'comfortable' | 'compact') {
   const p = me.preferences ?? {};

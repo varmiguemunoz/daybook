@@ -36,6 +36,17 @@ const TYPE_BY_EXT: Record<string, FileRecord['type']> = {
   py: 'code',
 };
 
+const ALLOWED_MIME_PREFIXES = [
+  'image/',
+  'application/pdf',
+  'application/zip',
+  'text/',
+  'application/json',
+  'application/msword',
+  'application/vnd.',
+  'application/octet-stream',
+];
+
 export function fileTypeOf(name: string): FileRecord['type'] {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
   return TYPE_BY_EXT[ext] ?? 'other';
@@ -54,14 +65,18 @@ export interface PresignResult {
   bucket: string;
 }
 
-export async function presignUpload(_repositories: Repositories, workspaceId: string, projectId: string | null, name: string, mimeType: string): Promise<PresignResult> {
+export async function presignUpload(
+  _repositories: Repositories,
+  workspaceId: string,
+  projectId: string | null,
+  name: string,
+  mimeType: string,
+): Promise<PresignResult> {
   const fileId = `f_${randomUUID()}`;
   const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const key = `gr8r-files/${workspaceId}/${projectId ?? 'workspace'}/${fileId}-${safeName}`;
 
-  const uploadUrl = r2Configured()
-    ? await presignPut(key, mimeType)
-    : `http://localhost:3001/api/files/local-upload/${fileId}`;
+  const uploadUrl = r2Configured() ? await presignPut(key, mimeType) : `http://localhost:3001/api/files/local-upload/${fileId}`;
 
   return { fileId, uploadUrl, key, bucket: bucketName() };
 }
@@ -110,8 +125,7 @@ export async function confirmUpload(
   if (sizeBytes > 250 * 1024 * 1024) {
     throw invalidInput([{ path: 'sizeBytes', message: 'File exceeds 250 MB limit' }]);
   }
-  const allowedPrefixes = ['image/', 'application/pdf', 'application/zip', 'text/', 'application/json', 'application/msword', 'application/vnd.', 'application/octet-stream'];
-  if (!allowedPrefixes.some(prefix => mimeType.startsWith(prefix))) {
+  if (!ALLOWED_MIME_PREFIXES.some(prefix => mimeType.startsWith(prefix))) {
     throw invalidInput([{ path: 'mimeType', message: 'Unsupported file type' }]);
   }
 
@@ -136,12 +150,12 @@ export async function confirmUpload(
 }
 
 export async function listFiles(repositories: Repositories, workspaceId: string, taskId?: string): Promise<FileRecord[]> {
-  if (taskId) return repositories.files.listByTask(taskId);
+  if (taskId) return repositories.files.listByTask(workspaceId, taskId);
   return repositories.files.listByWorkspace(workspaceId);
 }
 
-export async function getFile(repositories: Repositories, id: string): Promise<FileRecord> {
-  const file = await repositories.files.findById(id);
+export async function getFile(repositories: Repositories, workspaceId: string, id: string): Promise<FileRecord> {
+  const file = await repositories.files.findById(workspaceId, id);
   if (!file) throw notFound('File');
   return file;
 }
@@ -152,13 +166,13 @@ export async function downloadUrl(file: FileRecord): Promise<string> {
   return presignGet(file.r2Key);
 }
 
-export async function deleteFile(repositories: Repositories, id: string): Promise<void> {
-  const file = await getFile(repositories, id);
+export async function deleteFile(repositories: Repositories, workspaceId: string, id: string): Promise<void> {
+  const file = await getFile(repositories, workspaceId, id);
   if (r2Configured()) {
     const { deleteObject } = await import('../../shared/storage/r2');
     if (file.r2Key) await deleteObject(file.r2Key).catch(() => undefined);
   }
-  const removed = await repositories.files.remove(id);
+  const removed = await repositories.files.remove(workspaceId, id);
   if (!removed) throw notFound('File');
 }
 

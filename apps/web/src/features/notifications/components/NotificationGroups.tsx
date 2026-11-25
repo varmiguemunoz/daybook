@@ -34,14 +34,7 @@ export function NotificationGroups({ activity, members, tasks }: Props) {
           <div className="panel" style={{ overflow: 'hidden' }}>
             {entries.map(entry => {
               const task = entry.taskId ? taskById.get(entry.taskId) : undefined;
-              return (
-                <NotificationRow
-                  key={entry.id}
-                  entry={entry}
-                  actor={entry.actorId ? memberById.get(entry.actorId) : undefined}
-                  task={task}
-                />
-              );
+              return <NotificationRow key={entry.id} entry={entry} actor={entry.actorId ? memberById.get(entry.actorId) : undefined} task={task} />;
             })}
           </div>
         </div>

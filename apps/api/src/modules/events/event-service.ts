@@ -8,7 +8,12 @@ export async function listEvents(repositories: Repositories, workspaceId: string
   return repositories.events.listByWorkspace(workspaceId, from, to);
 }
 
-export async function createEvent(repositories: Repositories, workspaceId: string, actorId: string, input: Omit<CalendarEvent, 'id' | 'workspaceId' | 'createdAt' | 'createdBy'>): Promise<CalendarEvent> {
+export async function createEvent(
+  repositories: Repositories,
+  workspaceId: string,
+  actorId: string,
+  input: Omit<CalendarEvent, 'id' | 'workspaceId' | 'createdAt' | 'createdBy'>,
+): Promise<CalendarEvent> {
   const event = calendarEventSchema.parse({
     ...input,
     id: `ev_${randomUUID()}`,
@@ -19,13 +24,13 @@ export async function createEvent(repositories: Repositories, workspaceId: strin
   return created;
 }
 
-export async function updateEvent(repositories: Repositories, id: string, patch: Partial<CalendarEvent>): Promise<CalendarEvent> {
-  const updated = await repositories.events.update(id, patch);
+export async function updateEvent(repositories: Repositories, workspaceId: string, id: string, patch: Partial<CalendarEvent>): Promise<CalendarEvent> {
+  const updated = await repositories.events.update(workspaceId, id, patch);
   if (!updated) throw notFound('Event');
   return updated;
 }
 
-export async function deleteEvent(repositories: Repositories, id: string): Promise<void> {
-  const removed = await repositories.events.remove(id);
+export async function deleteEvent(repositories: Repositories, workspaceId: string, id: string): Promise<void> {
+  const removed = await repositories.events.remove(workspaceId, id);
   if (!removed) throw notFound('Event');
 }

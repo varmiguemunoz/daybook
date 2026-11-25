@@ -50,5 +50,5 @@ export function SettingsBody({ section }: { section: string }) {
     shortcuts: <ShortcutsSection />,
   };
 
-  return sections[section] ?? <WorkspaceSection workspace={bootstrap?.workspace} />;
+  return sections[section] ?? <WorkspaceSection />;
 }

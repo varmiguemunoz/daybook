@@ -62,19 +62,19 @@ export class MemoryTaskRepository implements TaskRepository {
       .sort((a, b) => a.order - b.order);
   }
 
-  async findById(id: string): Promise<Task | null> {
-    return this.items.find(id);
+  async findById(workspaceId: string, id: string): Promise<Task | null> {
+    return this.items.find(id, { workspaceId });
   }
 
   async create(task: Task): Promise<Task> {
     return this.items.insert(task);
   }
 
-  async update(id: string, patch: Partial<Task>): Promise<Task | null> {
-    return this.items.patch(id, patch);
+  async update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null> {
+    return this.items.patch(id, patch, { workspaceId });
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }

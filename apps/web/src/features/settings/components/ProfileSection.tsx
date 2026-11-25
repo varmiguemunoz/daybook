@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useUser } from '@clerk/react';
 import type { Member } from '@gr8r/domain';
 import { ROLE_LABELS } from '@gr8r/domain';
 import { Avatar } from '../../../shared/ui/Avatar';
@@ -23,7 +24,28 @@ function ProfileIdentity({ me }: { me?: Member }) {
   );
 }
 
-function ProfileFields({ name, title, timezone, onName, onTitle, onTimezone }: {
+function FieldRow({ label, hint, value, onChange }: { label: string; hint?: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="srow">
+      <div>
+        <div className="t">{label}</div>
+        {hint && <div className="d">{hint}</div>}
+      </div>
+      <div className="row">
+        <input className="input" value={value} onChange={event => onChange(event.target.value)} aria-label={label} />
+      </div>
+    </div>
+  );
+}
+
+function ProfileFields({
+  name,
+  title,
+  timezone,
+  onName,
+  onTitle,
+  onTimezone,
+}: {
   name: string;
   title: string;
   timezone: string;
@@ -33,36 +55,39 @@ function ProfileFields({ name, title, timezone, onName, onTitle, onTimezone }: {
 }) {
   return (
     <>
-      <div className="srow">
-        <div>
-          <div className="t">Name</div>
-        </div>
-        <div className="row">
-          <input className="input" value={name} onChange={event => onName(event.target.value)} aria-label="Name" />
-        </div>
-      </div>
-      <div className="srow">
-        <div>
-          <div className="t">Title</div>
-        </div>
-        <div className="row">
-          <input className="input" value={title} onChange={event => onTitle(event.target.value)} aria-label="Title" />
-        </div>
-      </div>
-      <div className="srow">
-        <div>
-          <div className="t">Timezone</div>
-          <div className="d">Used for reminders and due dates.</div>
-        </div>
-        <div className="row">
-          <input className="input" value={timezone} onChange={event => onTimezone(event.target.value)} aria-label="Timezone" />
-        </div>
-      </div>
+      <FieldRow label="Name" value={name} onChange={onName} />
+      <FieldRow label="Title" value={title} onChange={onTitle} />
+      <FieldRow label="Timezone" hint="Used for reminders and due dates." value={timezone} onChange={onTimezone} />
     </>
   );
 }
 
-function ProfileBody({ me, name, title, timezone, roleLabel, pending, onSave, onName, onTitle, onTimezone }: {
+function RoleRow({ roleLabel }: { roleLabel: string }) {
+  return (
+    <div className="srow">
+      <div>
+        <div className="t">Role</div>
+        <div className="d">Ask an admin to change your role.</div>
+      </div>
+      <div className="row">
+        <span className="pillbtn">{roleLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function ProfileBody({
+  me,
+  name,
+  title,
+  timezone,
+  roleLabel,
+  pending,
+  onSave,
+  onName,
+  onTitle,
+  onTimezone,
+}: {
   me?: Member;
   name: string;
   title: string;
@@ -81,15 +106,7 @@ function ProfileBody({ me, name, title, timezone, roleLabel, pending, onSave, on
       <div className="sblock" style={{ marginTop: 0 }}>
         <ProfileIdentity me={me} />
         <ProfileFields name={name} title={title} timezone={timezone} onName={onName} onTitle={onTitle} onTimezone={onTimezone} />
-        <div className="srow">
-          <div>
-            <div className="t">Role</div>
-            <div className="d">Ask an owner to change your role.</div>
-          </div>
-          <div className="row">
-            <span className="pillbtn">{roleLabel}</span>
-          </div>
-        </div>
+        <RoleRow roleLabel={roleLabel} />
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
           <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending}>
             {pending ? 'Saving…' : 'Save'}
@@ -105,12 +122,14 @@ export function ProfileSection({ me }: Props) {
   const [title, setTitle] = useState(me?.title ?? '');
   const [timezone, setTimezone] = useState(me?.timezone ?? 'UTC');
   const update = useUpdateMember(me?.id ?? '');
+  const { user } = useUser();
   const roleLabel = me ? ROLE_LABELS[me.role] : '—';
 
   async function save() {
-    if (!me) return;
+    if (!me || !user) return;
+    const [firstName = '', ...lastNames] = name.trim().split(/\s+/);
     try {
-      await update.mutateAsync({ name, title, timezone });
+      await Promise.all([user.update({ firstName, lastName: lastNames.join(' ') }), update.mutateAsync({ title, timezone })]);
       showToast('Profile updated', 'success');
     } catch {
       showToast('Failed to update profile', 'error');

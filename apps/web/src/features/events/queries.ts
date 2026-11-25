@@ -10,7 +10,8 @@ export function useEvents(range?: { from?: string; to?: string }) {
 export function useCreateEvent() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: Omit<CalendarEvent, 'id' | 'workspaceId' | 'createdAt' | 'createdBy'>) => apiFetch<CalendarEvent>('/api/events', { method: 'POST', body: JSON.stringify(input) }),
+    mutationFn: (input: Omit<CalendarEvent, 'id' | 'workspaceId' | 'createdAt' | 'createdBy'>) =>
+      apiFetch<CalendarEvent>('/api/events', { method: 'POST', body: JSON.stringify(input) }),
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.events() }),
   });
 }

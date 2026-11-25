@@ -50,8 +50,8 @@ export async function listNotifications(repositories: Repositories, userId: stri
   return repositories.notifications.listByUser(userId, unreadOnly);
 }
 
-export async function markRead(repositories: Repositories, id: string): Promise<Notification> {
-  const updated = await repositories.notifications.markRead(id);
+export async function markRead(repositories: Repositories, userId: string, id: string): Promise<Notification> {
+  const updated = await repositories.notifications.markRead(userId, id);
   if (!updated) throw notFound('Notification');
   return updated;
 }

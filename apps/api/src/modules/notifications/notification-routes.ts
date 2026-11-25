@@ -13,8 +13,8 @@ export function notificationRoutes(repositories: Repositories): Hono {
   });
 
   routes.patch('/:id/read', async context => {
-    await requestContext(repositories, context);
-    return context.json(await markRead(repositories, context.req.param('id')));
+    const { member } = await requestContext(repositories, context);
+    return context.json(await markRead(repositories, member.id, context.req.param('id')));
   });
 
   routes.post('/read-all', async context => {

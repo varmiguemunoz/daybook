@@ -28,3 +28,9 @@ export function modelFor(definition: { name: string; schema: unknown }): any {
   if (existing) return existing;
   return mongoose.model(definition.name, definition.schema as any);
 }
+
+export function upsertUpdate<T extends object>(document: T & { id: string }, patch: Partial<T>): Record<string, unknown> {
+  const { id, ...rest } = document;
+  const insertOnly = Object.fromEntries(Object.entries(rest).filter(([key]) => !(key in patch)));
+  return { $setOnInsert: { _id: id, ...insertOnly }, $set: patch };
+}

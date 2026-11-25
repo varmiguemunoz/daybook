@@ -10,10 +10,7 @@ export async function search(repositories: Repositories, workspaceId: string, qu
   const term = query.trim().toLowerCase();
   if (!term) return { tasks: [], members: [] };
 
-  const [tasks, members] = await Promise.all([
-    repositories.tasks.list(workspaceId, { search: term }),
-    repositories.members.listByWorkspace(workspaceId),
-  ]);
+  const [tasks, members] = await Promise.all([repositories.tasks.list(workspaceId, { search: term }), repositories.members.listByWorkspace(workspaceId)]);
 
   return {
     tasks,

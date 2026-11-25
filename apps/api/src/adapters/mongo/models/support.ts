@@ -1,6 +1,9 @@
 import { Schema } from 'mongoose';
 
-const workspaceSchema = new Schema({ _id: String, name: String, slug: { type: String, index: true }, color: String, ownerId: String, createdAt: Number, updatedAt: Number }, { versionKey: false });
+const workspaceSchema = new Schema(
+  { _id: String, clerkOrgId: { type: String, required: true, unique: true }, name: String, color: String, createdAt: Number },
+  { versionKey: false },
+);
 
 const memberSchema = new Schema(
   {
@@ -15,7 +18,7 @@ const memberSchema = new Schema(
     status: String,
     timezone: String,
     lastSeenAt: { type: Number, default: null },
-    clerkUserId: { type: String, default: null },
+    clerkUserId: { type: String, required: true },
     preferences: { type: Schema.Types.Mixed, default: {} },
     createdAt: Number,
     updatedAt: Number,
@@ -23,7 +26,8 @@ const memberSchema = new Schema(
   { versionKey: false },
 );
 
-memberSchema.index({ workspaceId: 1, role: 1 });
+memberSchema.index({ workspaceId: 1, clerkUserId: 1 }, { unique: true });
+memberSchema.index({ clerkUserId: 1 });
 
 const activitySchema = new Schema(
   {
@@ -44,25 +48,6 @@ activitySchema.index({ workspaceId: 1, at: -1 });
 export const WorkspaceModel = { name: 'Workspace', schema: workspaceSchema };
 export const MemberModel = { name: 'Member', schema: memberSchema };
 export const ActivityModel = { name: 'Activity', schema: activitySchema };
-
-const invitationSchema = new Schema(
-  {
-    _id: String,
-    workspaceId: { type: String, required: true },
-    email: String,
-    role: String,
-    token: { type: String, index: true },
-    invitedBy: String,
-    expiresAt: Number,
-    acceptedAt: { type: Number, default: null },
-    createdAt: Number,
-  },
-  { versionKey: false },
-);
-
-invitationSchema.index({ workspaceId: 1, email: 1 });
-
-export const InvitationModel = { name: 'Invitation', schema: invitationSchema };
 
 const teamSchema = new Schema(
   {
@@ -94,7 +79,7 @@ const commentSchema = new Schema(
   },
   { versionKey: false },
 );
-commentSchema.index({ taskId: 1, createdAt: 1 });
+commentSchema.index({ workspaceId: 1, taskId: 1, createdAt: 1 });
 export const CommentModel = { name: 'Comment', schema: commentSchema };
 
 const fileSchema = new Schema(
@@ -174,4 +159,3 @@ const notificationSchema = new Schema(
 );
 notificationSchema.index({ userId: 1, read: 1, at: -1 });
 export const NotificationModel = { name: 'Notification', schema: notificationSchema };
-

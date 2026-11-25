@@ -1,24 +1,18 @@
-import { ClerkProvider } from '@clerk/clerk-react';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '../features/auth/AuthProvider';
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary';
-import { CommandPalette } from '../shared/ui/CommandPalette';
 import { ToastHost } from '../shared/ui/Toast';
-import { Providers } from './providers';
-import { AppRouter } from './router';
-
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
+import { AppRoutes } from './router';
 
 export function App() {
-  const inner = (
+  return (
     <ErrorBoundary>
-      <Providers>
-        <AppRouter />
-        <CommandPalette />
-        <ToastHost />
-      </Providers>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+      <ToastHost />
     </ErrorBoundary>
   );
-
-  if (!publishableKey) return inner;
-
-  return <ClerkProvider publishableKey={publishableKey}>{inner}</ClerkProvider>;
 }

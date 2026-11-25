@@ -3,7 +3,10 @@ import { queryKeys, apiFetch } from '../../shared/api/client';
 import type { Notification } from '@gr8r/domain';
 
 export function useNotifications(unreadOnly = false) {
-  return useQuery({ queryKey: queryKeys.notifications(unreadOnly), queryFn: () => apiFetch<Notification[]>(`/api/notifications${unreadOnly ? '?unread=true' : ''}`) });
+  return useQuery({
+    queryKey: queryKeys.notifications(unreadOnly),
+    queryFn: () => apiFetch<Notification[]>(`/api/notifications${unreadOnly ? '?unread=true' : ''}`),
+  });
 }
 
 export function useMarkNotificationRead(id: string) {

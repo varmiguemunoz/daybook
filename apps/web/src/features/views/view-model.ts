@@ -103,4 +103,3 @@ export function groupTasks(tasks: Task[], group: GroupBy, members: Member[]): Ta
     tasks: tasks.filter(task => dueBucket(task) === key),
   })).filter(entry => entry.tasks.length > 0);
 }
-

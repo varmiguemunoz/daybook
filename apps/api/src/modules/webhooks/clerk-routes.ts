@@ -1,75 +1,58 @@
-import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
-import { Webhook } from 'svix';
+import type { OrganizationMembershipJSON, UserJSON, WebhookEvent } from '@clerk/backend';
+import { verifyWebhook } from '@clerk/backend/webhooks';
 import type { Repositories } from '../../ports/repositories';
+import { roleOf, syncMember, syncWorkspace } from '../identity/identity-service';
 
-function deriveName(data: Record<string, unknown>): { name: string; email: string | undefined } {
-  const email = (data.email_addresses as Array<{ email_address: string }>)?.[0]?.email_address;
-  const firstName = (data.first_name as string) ?? '';
-  const lastName = (data.last_name as string) ?? '';
-  const name = `${firstName} ${lastName}`.trim() || email || 'New member';
-  return { name, email };
+function fullName(first: string | null, last: string | null, fallback: string): string {
+  return [first, last].filter(Boolean).join(' ') || fallback;
 }
 
-async function upsertClerkUser(repositories: Repositories, data: Record<string, unknown>): Promise<void> {
-  const clerkUserId = String(data.id);
-  const { name, email } = deriveName(data);
+async function syncMembership(repositories: Repositories, data: OrganizationMembershipJSON): Promise<void> {
+  const workspace = await syncWorkspace(repositories, data.organization.id, data.organization.name);
+  const user = data.public_user_data;
+  const name = fullName(user.first_name, user.last_name, user.identifier);
+  await syncMember(repositories, workspace.id, { clerkUserId: user.user_id, name, email: user.identifier, role: roleOf(data.role) });
+}
 
-  const workspace = await repositories.workspaces.findFirst();
+async function disableMembership(repositories: Repositories, data: OrganizationMembershipJSON): Promise<void> {
+  const workspace = await repositories.workspaces.findByClerkOrgId(data.organization.id);
   if (!workspace) return;
-
-  const members = await repositories.members.listByWorkspace(workspace.id);
-  const existing = members.find(member => member.clerkUserId === clerkUserId);
-  if (existing) {
-    await repositories.members.update(existing.id, { name, email: email ?? existing.email });
-    return;
-  }
-
-  await createClerkMember(repositories, workspace.id, clerkUserId, name, email, members.length === 0);
+  const member = await repositories.members.findByClerkUserId(workspace.id, data.public_user_data.user_id);
+  if (member) await repositories.members.update(workspace.id, member.id, { status: 'disabled' });
 }
 
-async function createClerkMember(repositories: Repositories, workspaceId: string, clerkUserId: string, name: string, email: string | undefined, isFirst: boolean): Promise<void> {
-  const { memberSchema } = await import('@gr8r/domain');
-  const member = memberSchema.parse({
-    id: `m_${randomUUID()}`,
-    workspaceId,
-    name,
-    email: email ?? `${clerkUserId}@clerk.local`,
-    role: isFirst ? 'owner' : 'member',
-    clerkUserId,
-    color: '#6B7280',
-  });
-  await repositories.members.create(member);
+async function syncUser(repositories: Repositories, data: UserJSON): Promise<void> {
+  const email = data.email_addresses.find(address => address.id === data.primary_email_address_id)?.email_address;
+  if (!email) return;
+  await repositories.members.updateByClerkUserId(data.id, { name: fullName(data.first_name, data.last_name, email), email });
 }
 
-function verifyClerkEvent(secret: string | undefined, payload: string, context: { req: { header: (name: string) => string | undefined } }): { type: string; data: Record<string, unknown> } | null {
-  if (!secret) return JSON.parse(payload) as { type: string; data: Record<string, unknown> };
-  try {
-    const wh = new Webhook(secret);
-    const verified = (wh.verify as (p: string, h: Record<string, string>) => unknown)(payload, {
-      'svix-id': context.req.header('svix-id') ?? '',
-      'svix-timestamp': context.req.header('svix-timestamp') ?? '',
-      'svix-signature': context.req.header('svix-signature') ?? '',
-    });
-    return verified as { type: string; data: Record<string, unknown> };
-  } catch {
-    return null;
+async function handle(repositories: Repositories, event: WebhookEvent): Promise<void> {
+  switch (event.type) {
+    case 'organization.created':
+    case 'organization.updated':
+      await syncWorkspace(repositories, event.data.id, event.data.name);
+      return;
+    case 'organizationMembership.created':
+    case 'organizationMembership.updated':
+      return syncMembership(repositories, event.data);
+    case 'organizationMembership.deleted':
+      return disableMembership(repositories, event.data);
+    case 'user.updated':
+      return syncUser(repositories, event.data);
+    case 'user.deleted':
+      if (event.data.id) await repositories.members.updateByClerkUserId(event.data.id, { status: 'disabled' });
   }
 }
 
-export function clerkWebhookRoutes(repositories: Repositories): Hono {
+export function clerkWebhookRoutes(repositories: Repositories, signingSecret: string): Hono {
   const routes = new Hono();
 
   routes.post('/', async context => {
-    const secret = process.env.CLERK_WEBHOOK_SECRET;
-    const payload = await context.req.text();
-    const event = verifyClerkEvent(secret, payload, context);
+    const event = await verifyWebhook(context.req.raw, { signingSecret }).catch(() => null);
     if (!event) return context.json({ error: { message: 'Invalid signature' } }, 400);
-
-    if (event.type === 'user.created' || event.type === 'user.updated') {
-      await upsertClerkUser(repositories, event.data);
-    }
-
+    await handle(repositories, event);
     return context.json({ received: true });
   });
 

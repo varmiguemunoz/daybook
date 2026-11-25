@@ -59,7 +59,14 @@ function DueCell({ task }: { task: Task }) {
 
 export function TaskRow({ task, assignee, columns, template, onOpen, onDelete }: TaskRowProps) {
   return (
-    <div className={`trow ${task.status === 'done' ? 'done' : ''}`.trim()} style={{ ['--cols' as string]: template }} data-task-row={task.id} onClick={() => onOpen(task)} role="button" tabIndex={0}>
+    <div
+      className={`trow ${task.status === 'done' ? 'done' : ''}`.trim()}
+      style={{ ['--cols' as string]: template }}
+      data-task-row={task.id}
+      onClick={() => onOpen(task)}
+      role="button"
+      tabIndex={0}
+    >
       <div className="handle" draggable aria-hidden="true">
         <Icon name="grip-vertical" size={14} />
       </div>

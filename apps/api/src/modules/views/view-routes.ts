@@ -24,14 +24,14 @@ export function viewRoutes(repositories: Repositories): Hono {
   });
 
   routes.patch('/:id', async context => {
-    await requestContext(repositories, context);
+    const { workspace } = await requestContext(repositories, context);
     const input = parseBody(updateViewSchema, await readJson(context));
-    return context.json(await updateView(repositories, context.req.param('id'), input));
+    return context.json(await updateView(repositories, workspace.id, context.req.param('id'), input));
   });
 
   routes.delete('/:id', async context => {
-    await requestContext(repositories, context);
-    await deleteView(repositories, context.req.param('id'));
+    const { workspace } = await requestContext(repositories, context);
+    await deleteView(repositories, workspace.id, context.req.param('id'));
     return context.body(null, 204);
   });
 

@@ -28,8 +28,8 @@ export function taskRoutes(repositories: Repositories): Hono {
   });
 
   routes.get('/:id', async context => {
-    await requestContext(repositories, context);
-    return context.json(await getTask(repositories, context.req.param('id')));
+    const { workspace } = await requestContext(repositories, context);
+    return context.json(await getTask(repositories, workspace.id, context.req.param('id')));
   });
 
   routes.post('/', async context => {

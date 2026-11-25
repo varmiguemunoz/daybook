@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { taskSchema, type ActivityVerb, type CreateTaskInput, type Task, type TaskQuery, type UpdateTaskInput, type Workspace } from "@gr8r/domain";
+import { taskSchema, type ActivityVerb, type CreateTaskInput, type Task, type TaskQuery, type UpdateTaskInput, type Workspace } from '@gr8r/domain';
 import type { Repositories } from '../../ports/repositories';
 import { notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';
@@ -25,8 +25,8 @@ export function listTasks(repositories: Repositories, workspaceId: string, query
   return repositories.tasks.list(workspaceId, query);
 }
 
-export async function getTask(repositories: Repositories, id: string): Promise<Task> {
-  const task = await repositories.tasks.findById(id);
+export async function getTask(repositories: Repositories, workspaceId: string, id: string): Promise<Task> {
+  const task = await repositories.tasks.findById(workspaceId, id);
   if (!task) throw notFound('Task');
   return task;
 }
@@ -41,7 +41,7 @@ async function notifyOnAssign(
   assigneeId: string,
   actorId: string,
 ): Promise<void> {
-  const assignee = await repositories.members.findById(assigneeId);
+  const assignee = await repositories.members.findById(workspaceId, assigneeId);
   if (!assignee) return;
   await notify(repositories, {
     workspaceId,
@@ -117,8 +117,8 @@ function verbFor(current: Task, next: Task): ActivityVerb {
 }
 
 export async function updateTask(repositories: Repositories, workspace: Workspace, id: string, input: UpdateTaskInput, actorId: string): Promise<Task> {
-  const current = await getTask(repositories, id);
-  const updated = await repositories.tasks.update(id, taskPatch(current, input));
+  const current = await getTask(repositories, workspace.id, id);
+  const updated = await repositories.tasks.update(workspace.id, id, taskPatch(current, input));
   if (!updated) throw notFound('Task');
 
   await recordActivity(repositories, {
@@ -139,8 +139,8 @@ export async function updateTask(repositories: Repositories, workspace: Workspac
 }
 
 export async function deleteTask(repositories: Repositories, workspace: Workspace, id: string, actorId: string): Promise<void> {
-  const task = await getTask(repositories, id);
-  const removed = await repositories.tasks.remove(id);
+  const task = await getTask(repositories, workspace.id, id);
+  const removed = await repositories.tasks.remove(workspace.id, id);
   if (!removed) throw notFound('Task');
 
   await recordActivity(repositories, {

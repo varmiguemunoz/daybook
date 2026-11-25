@@ -1,6 +1,6 @@
 import { Icon } from '../../../shared/ui/Icon';
 import { isOverdue } from '../../../shared/dates';
-import type { HomeData } from './HomePage';
+import type { HomeData } from '../home-data';
 
 const WEEK = 7 * 86_400_000;
 

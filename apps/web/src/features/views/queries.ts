@@ -9,7 +9,8 @@ export function useViews(ownerId?: string) {
 export function useCreateView() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: Omit<SavedView, 'id' | 'workspaceId' | 'ownerId' | 'createdAt' | 'updatedAt'>) => apiFetch<SavedView>('/api/views', { method: 'POST', body: JSON.stringify(input) }),
+    mutationFn: (input: Omit<SavedView, 'id' | 'workspaceId' | 'ownerId' | 'createdAt' | 'updatedAt'>) =>
+      apiFetch<SavedView>('/api/views', { method: 'POST', body: JSON.stringify(input) }),
     onSuccess: () => client.invalidateQueries({ queryKey: ['views'] }),
   });
 }

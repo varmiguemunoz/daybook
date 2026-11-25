@@ -16,8 +16,8 @@ export const OWNER_ID = 'm1';
 
 export const defaultWorkspace: Workspace = {
   id: WORKSPACE_ID,
+  clerkOrgId: 'org_seed',
   name: 'Gr8r Studio',
-  slug: 'gr8rstudio',
   color: '#1D1C1A',
   createdAt: Date.now(),
 };

@@ -14,15 +14,12 @@
     "@aws-sdk/client-s3": "^3.1177.0",
     "@aws-sdk/s3-request-presigner": "^3.1177.0",
     "@clerk/backend": "^3.33.0",
-    "@clerk/clerk-react": "^5.61.12",
-    "@clerk/hono": "^0.1.108",
     "@gr8r/domain": "*",
     "@hono/node-server": "^1.13.7",
     "dotenv": "^18.0.10",
     "hono": "^4.6.0",
     "mongoose": "^8.8.0",
     "nodemailer": "^10.6.1",
-    "svix": "^2.11.1",
     "zod": "^4.0.0"
   }
 }

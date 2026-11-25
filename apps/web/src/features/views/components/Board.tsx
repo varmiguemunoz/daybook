@@ -96,15 +96,7 @@ export function Board({ tasks, members, onAdd, onOpen, onMove }: Props) {
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="board">
         {TASK_STATUSES.map(status => (
-          <BoardColumn
-            key={status}
-            status={status}
-            tasks={grouped(status)}
-            members={members}
-            onAdd={onAdd}
-            onOpen={onOpen}
-            onMove={onMove}
-          />
+          <BoardColumn key={status} status={status} tasks={grouped(status)} members={members} onAdd={onAdd} onOpen={onOpen} onMove={onMove} />
         ))}
       </div>
       <BoardOverlay activeTask={activeTask} members={members} />

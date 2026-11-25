@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Member, Team } from '@gr8r/domain';
 import { Drawer } from '../../../shared/ui/Drawer';
 import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog';
-import { useUpdateTeam, useDeleteTeam, useAddTeamMember, useRemoveTeamMember, useTeams } from "../../teams/queries";
+import { useUpdateTeam, useDeleteTeam, useAddTeamMember, useRemoveTeamMember, useTeams } from '../../teams/queries';
 import { showToast } from '../../../shared/ui/Toast';
 import { IconPicker } from '../../../shared/ui/IconPicker';
 
@@ -57,7 +57,11 @@ function useTeamActions(team: Team, onClose: () => void) {
   return { update, remove, addMember, removeMember, confirmOpen, setConfirmOpen, save, add, removeMemberFn, deleteTeam };
 }
 
-function TeamEditForm({ team, onSave, pending }: {
+function TeamEditForm({
+  team,
+  onSave,
+  pending,
+}: {
   team: Team;
   onSave: (patch: { name: string; description: string; color: string; icon: string }) => void;
   pending: boolean;
@@ -71,8 +75,22 @@ function TeamEditForm({ team, onSave, pending }: {
     <div className="col" style={{ gap: 10 }}>
       <input className="input" value={name} onChange={event => setName(event.target.value)} aria-label="Name" />
       <IconPicker value={icon} onChange={setIcon} />
-      <input className="input" type="color" value={color} onChange={event => setColor(event.target.value)} aria-label="Color" style={{ width: 48, padding: 2 }} />
-      <textarea className="input" value={description} onChange={event => setDescription(event.target.value)} placeholder="Description" aria-label="Description" rows={3} />
+      <input
+        className="input"
+        type="color"
+        value={color}
+        onChange={event => setColor(event.target.value)}
+        aria-label="Color"
+        style={{ width: 48, padding: 2 }}
+      />
+      <textarea
+        className="input"
+        value={description}
+        onChange={event => setDescription(event.target.value)}
+        placeholder="Description"
+        aria-label="Description"
+        rows={3}
+      />
       <button className="btn btn-primary" type="button" onClick={() => onSave({ name, description, color, icon })} disabled={pending}>
         {pending ? 'Saving…' : 'Save'}
       </button>
@@ -111,7 +129,17 @@ function AddMemberRow({ team, members, onAdd, pending }: { team: Team; members: 
           </option>
         ))}
       </select>
-      <button className="btn btn-primary btn-sm" type="button" onClick={() => { if (selected) { onAdd(selected); setSelected(''); } }} disabled={!selected || pending}>
+      <button
+        className="btn btn-primary btn-sm"
+        type="button"
+        onClick={() => {
+          if (selected) {
+            onAdd(selected);
+            setSelected('');
+          }
+        }}
+        disabled={!selected || pending}
+      >
         Add
       </button>
     </div>
@@ -133,7 +161,13 @@ function TeamDrawerBody({ teamId, members, onClose }: { teamId: string; members:
           Delete team
         </button>
       </div>
-      <ConfirmDialog open={actions.confirmOpen} title="Delete team" message={`Delete ${team.name}?`} onConfirm={actions.deleteTeam} onClose={() => actions.setConfirmOpen(false)} />
+      <ConfirmDialog
+        open={actions.confirmOpen}
+        title="Delete team"
+        message={`Delete ${team.name}?`}
+        onConfirm={actions.deleteTeam}
+        onClose={() => actions.setConfirmOpen(false)}
+      />
     </Drawer>
   );
 }

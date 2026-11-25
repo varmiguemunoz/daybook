@@ -20,6 +20,10 @@
   padding: 10vh 16px 16px;
   overflow-y: auto;
 }
+.modal-wrap.center {
+  align-items: center;
+  padding-top: 16px;
+}
 .modal {
   width: 100%;
   max-width: 560px;

@@ -12,7 +12,7 @@ describe.skipIf(!hasMongo)('Mongo repositories', () => {
     const tasks = await repositories.tasks.list('w1', {});
     expect(tasks.length).toBeGreaterThan(0);
 
-    const workspace = await repositories.workspaces.findFirst();
+    const workspace = await repositories.workspaces.findByClerkOrgId('org_seed');
     expect(workspace?.id).toBe('w1');
 
     await repositories.close();

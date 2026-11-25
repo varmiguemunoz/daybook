@@ -19,8 +19,6 @@ function subjectOf(entry: Activity, task?: Task): string {
   return entry.detail;
 }
 
-
-
 export function ActivityEntry({ entry, actor, task, meId }: EntryProps) {
   return (
     <div className="fitem">
@@ -48,15 +46,7 @@ export function ActivityList({ activity, members, tasks, meId }: ListProps) {
     <div className="feed lined">
       {activity.map(entry => {
         const task = entry.taskId ? taskById.get(entry.taskId) : undefined;
-        return (
-          <ActivityEntry
-            key={entry.id}
-            entry={entry}
-            actor={entry.actorId ? memberById.get(entry.actorId) : undefined}
-            task={task}
-            meId={meId}
-          />
-        );
+        return <ActivityEntry key={entry.id} entry={entry} actor={entry.actorId ? memberById.get(entry.actorId) : undefined} task={task} meId={meId} />;
       })}
     </div>
   );

@@ -1,30 +1,28 @@
 import { useState } from 'react';
-import type { Workspace } from '@gr8r/domain';
-import { useUpdateWorkspace } from '../../workspace/queries';
+import { useOrganization } from '@clerk/react';
 import { WorkspaceLogo } from '../../../shared/ui/Brand';
 import { showToast } from '../../../shared/ui/Toast';
+import { useCanManageOrganization } from '../../members/queries';
 
-interface Props {
-  workspace?: Workspace;
-}
+const LOGO_COLOR = '#1D1C1A';
 
-function WorkspaceIdentity({ name, color }: { name: string; color: string }) {
+function WorkspaceIdentity({ name }: { name: string }) {
   return (
     <div className="row" style={{ gap: 14, marginBottom: 18 }}>
-      <WorkspaceLogo name={name || 'Gr8r'} color={color} brand size={52} />
+      <WorkspaceLogo name={name || 'W'} color={LOGO_COLOR} size={52} />
       <div>
         <div className="label" style={{ marginBottom: 6 }}>
           Workspace icon
         </div>
         <div className="faint" style={{ fontSize: 12.5 }}>
-          The Gr8r mark is used for this workspace.
+          Generated from the workspace name.
         </div>
       </div>
     </div>
   );
 }
 
-function WorkspaceRows({ name, slug, onName }: { name: string; slug: string; onName: (v: string) => void }) {
+function WorkspaceRows({ name, slug, editable, onName }: { name: string; slug: string; editable: boolean; onName: (v: string) => void }) {
   return (
     <>
       <div className="srow">
@@ -33,7 +31,7 @@ function WorkspaceRows({ name, slug, onName }: { name: string; slug: string; onN
           <div className="d">Shown in the sidebar and invites.</div>
         </div>
         <div className="row">
-          <input className="input" value={name} onChange={event => onName(event.target.value)} aria-label="Workspace name" />
+          <input className="input" value={name} onChange={event => onName(event.target.value)} disabled={!editable} aria-label="Workspace name" />
         </div>
       </div>
       <div className="srow">
@@ -49,54 +47,47 @@ function WorkspaceRows({ name, slug, onName }: { name: string; slug: string; onN
   );
 }
 
-function WorkspaceBody({ name, slug, color, pending, onSave, onName }: {
-  name: string;
-  slug: string;
-  color: string;
-  pending: boolean;
-  onSave: () => void;
-  onName: (v: string) => void;
-}) {
+function useRenameWorkspace() {
+  const { organization } = useOrganization();
+  const [pending, setPending] = useState(false);
+
+  async function rename(name: string) {
+    if (!organization) return;
+    setPending(true);
+    try {
+      await organization.update({ name });
+      showToast('Workspace updated', 'success');
+    } catch {
+      showToast('Failed to update workspace', 'error');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return { rename, pending };
+}
+
+export function WorkspaceSection() {
+  const { organization } = useOrganization();
+  const editable = useCanManageOrganization();
+  const [name, setName] = useState(organization?.name ?? '');
+  const { rename, pending } = useRenameWorkspace();
+
   return (
     <>
       <h1>Workspace</h1>
       <p className="lead">Settings that apply to everyone in this workspace.</p>
       <div className="sblock" style={{ marginTop: 0 }}>
-        <WorkspaceIdentity name={name} color={color} />
-        <WorkspaceRows name={name} slug={slug} onName={onName} />
-        <div className="row" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
-          <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending}>
-            {pending ? 'Saving…' : 'Save'}
-          </button>
-        </div>
+        <WorkspaceIdentity name={name} />
+        <WorkspaceRows name={name} slug={organization?.slug ?? ''} editable={editable} onName={setName} />
+        {editable && (
+          <div className="row" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
+            <button className="btn btn-primary" type="button" onClick={() => rename(name.trim())} disabled={pending || !name.trim()}>
+              {pending ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        )}
       </div>
     </>
-  );
-}
-
-export function WorkspaceSection({ workspace }: Props) {
-  const [name, setName] = useState(workspace?.name ?? '');
-  const [color] = useState(workspace?.color ?? '#1D1C1A');
-  const update = useUpdateWorkspace(workspace?.id ?? '');
-
-  async function save() {
-    if (!workspace) return;
-    try {
-      await update.mutateAsync({ name, color });
-      showToast('Workspace updated', 'success');
-    } catch {
-      showToast('Failed to update workspace', 'error');
-    }
-  }
-
-  return (
-    <WorkspaceBody
-      name={name}
-      slug={workspace?.slug ?? 'gr8rstudio'}
-      color={color}
-      pending={update.isPending}
-      onSave={save}
-      onName={setName}
-    />
   );
 }

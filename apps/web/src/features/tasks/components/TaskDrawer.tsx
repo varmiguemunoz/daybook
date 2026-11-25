@@ -13,7 +13,12 @@ interface Props {
   onClose: () => void;
 }
 
-function TaskEditForm({ task, members, onSave, pending }: {
+function TaskEditForm({
+  task,
+  members,
+  onSave,
+  pending,
+}: {
   task: Task;
   members: Member[];
   onSave: (patch: { title: string; status: Task['status']; priority: Task['priority']; dueDate: string; assigneeId: string | null }) => void;
@@ -38,12 +43,7 @@ function TaskEditForm({ task, members, onSave, pending }: {
           </option>
         ))}
       </select>
-      <button
-        className="btn btn-primary"
-        type="button"
-        onClick={() => onSave({ title, status, priority, dueDate, assigneeId })}
-        disabled={pending}
-      >
+      <button className="btn btn-primary" type="button" onClick={() => onSave({ title, status, priority, dueDate, assigneeId })} disabled={pending}>
         {pending ? 'Saving…' : 'Save'}
       </button>
     </div>

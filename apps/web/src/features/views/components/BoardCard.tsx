@@ -106,7 +106,6 @@ export function BoardCardView({ task, members }: Omit<CardProps, 'onOpen'>) {
   );
 }
 
-
 export function BoardCard({ task, members, onOpen }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, cursor: 'grab' };

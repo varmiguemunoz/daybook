@@ -28,9 +28,7 @@ function WeekColumn({ day, tasks, members }: Omit<Props, 'days'> & { day: Date }
       </div>
       <div className="wcol-b">
         {items.length ? (
-          items.map(task => (
-            <WeekChip key={task.id} task={task} assignee={task.assigneeId ? members.get(task.assigneeId) : undefined} />
-          ))
+          items.map(task => <WeekChip key={task.id} task={task} assignee={task.assigneeId ? members.get(task.assigneeId) : undefined} />)
         ) : (
           <span className="faint" style={{ fontSize: 12, padding: 4 }}>
             No tasks

@@ -30,18 +30,14 @@ describe('task schema', () => {
 });
 
 describe('permissions', () => {
-  it('gives the owner every permission', () => {
-    expect(permissionsOf('owner')).toContain('role:manage');
-    expect(can('owner', 'project:delete')).toBe(true);
+  it('gives admins every permission', () => {
+    expect(permissionsOf('admin')).toContain('workspace:manage');
+    expect(can('admin', 'project:delete')).toBe(true);
   });
 
-  it('keeps destructive project actions away from admins', () => {
-    expect(can('admin', 'project:delete')).toBe(false);
-    expect(can('admin', 'member:invite')).toBe(true);
-  });
-
-  it('limits guests to reading projects', () => {
-    expect(can('guest', 'project:read')).toBe(true);
-    expect(can('guest', 'task:write')).toBe(false);
+  it('keeps workspace management and deletes away from members', () => {
+    expect(can('member', 'task:write')).toBe(true);
+    expect(can('member', 'project:delete')).toBe(false);
+    expect(can('member', 'workspace:manage')).toBe(false);
   });
 });

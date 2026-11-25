@@ -8,8 +8,8 @@ export async function listTeams(repositories: Repositories, workspaceId: string)
   return repositories.teams.listByWorkspace(workspaceId);
 }
 
-export async function getTeam(repositories: Repositories, id: string): Promise<Team> {
-  const team = await repositories.teams.findById(id);
+export async function getTeam(repositories: Repositories, workspaceId: string, id: string): Promise<Team> {
+  const team = await repositories.teams.findById(workspaceId, id);
   if (!team) throw notFound('Team');
   return team;
 }
@@ -29,45 +29,34 @@ export async function createTeam(repositories: Repositories, workspaceId: string
   return created;
 }
 
-export async function updateTeam(repositories: Repositories, id: string, input: UpdateTeamInput): Promise<Team> {
-  const current = await getTeam(repositories, id);
-  const updated = await repositories.teams.update(current.id, { ...input, updatedAt: Date.now() });
+async function saveTeam(repositories: Repositories, workspaceId: string, id: string, patch: Partial<Team>): Promise<Team> {
+  const updated = await repositories.teams.update(workspaceId, id, { ...patch, updatedAt: Date.now() });
   if (!updated) throw notFound('Team');
   return updated;
+}
+
+export function updateTeam(repositories: Repositories, workspaceId: string, id: string, input: UpdateTeamInput): Promise<Team> {
+  return saveTeam(repositories, workspaceId, id, input);
 }
 
 export async function deleteTeam(repositories: Repositories, workspaceId: string, id: string, actorId: string): Promise<void> {
-  const team = await getTeam(repositories, id);
-  // cascade: unset teamId on members
+  const team = await getTeam(repositories, workspaceId, id);
   const members = await repositories.members.listByWorkspace(workspaceId);
-  for (const member of members) {
-    if (member.teamId === id) {
-      await repositories.members.update(member.id, { teamId: null });
-    }
-  }
-  const removed = await repositories.teams.remove(id);
-  if (!removed) throw notFound('Team');
+  await Promise.all(members.filter(member => member.teamId === id).map(member => repositories.members.update(workspaceId, member.id, { teamId: null })));
+  await repositories.teams.remove(workspaceId, id);
   await recordActivity(repositories, { workspaceId, actorId, verb: 'deleted', detail: team.name });
 }
 
-export async function addMemberToTeam(repositories: Repositories, teamId: string, memberId: string): Promise<Team> {
-  const team = await getTeam(repositories, teamId);
-  const member = await repositories.members.findById(memberId);
+export async function addMemberToTeam(repositories: Repositories, workspaceId: string, teamId: string, memberId: string): Promise<Team> {
+  const team = await getTeam(repositories, workspaceId, teamId);
+  const member = await repositories.members.update(workspaceId, memberId, { teamId });
   if (!member) throw notFound('Member');
-  if (!team.memberIds.includes(memberId)) {
-    await repositories.teams.update(teamId, { memberIds: [...team.memberIds, memberId] });
-  }
-  await repositories.members.update(memberId, { teamId });
-  const updated = await repositories.teams.findById(teamId);
-  if (!updated) throw notFound('Team');
-  return updated;
+  const memberIds = team.memberIds.includes(memberId) ? team.memberIds : [...team.memberIds, memberId];
+  return saveTeam(repositories, workspaceId, teamId, { memberIds });
 }
 
-export async function removeMemberFromTeam(repositories: Repositories, teamId: string, memberId: string): Promise<Team> {
-  const team = await getTeam(repositories, teamId);
-  await repositories.teams.update(teamId, { memberIds: team.memberIds.filter(id => id !== memberId) });
-  await repositories.members.update(memberId, { teamId: null });
-  const updated = await repositories.teams.findById(teamId);
-  if (!updated) throw notFound('Team');
-  return updated;
+export async function removeMemberFromTeam(repositories: Repositories, workspaceId: string, teamId: string, memberId: string): Promise<Team> {
+  const team = await getTeam(repositories, workspaceId, teamId);
+  await repositories.members.update(workspaceId, memberId, { teamId: null });
+  return saveTeam(repositories, workspaceId, teamId, { memberIds: team.memberIds.filter(id => id !== memberId) });
 }

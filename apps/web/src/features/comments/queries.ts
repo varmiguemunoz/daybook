@@ -9,7 +9,8 @@ export function useComments(taskId: string) {
 export function useCreateComment(taskId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateCommentInput) => apiFetch<Comment>(`/api/comments/tasks/${taskId}`, { method: 'POST', body: JSON.stringify({ ...input, taskId }) }),
+    mutationFn: (input: CreateCommentInput) =>
+      apiFetch<Comment>(`/api/comments/tasks/${taskId}`, { method: 'POST', body: JSON.stringify({ ...input, taskId }) }),
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.comments(taskId) }),
   });
 }

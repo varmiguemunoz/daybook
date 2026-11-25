@@ -34,11 +34,7 @@ export function Popover({ open, anchor, onClose, children, className = 'pop' }: 
   const rect = anchor.getBoundingClientRect();
 
   return createPortal(
-    <div
-      ref={ref}
-      className={className}
-      style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 1000 }}
-    >
+    <div ref={ref} className={className} style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 1000 }}>
       {children}
     </div>,
     document.body,

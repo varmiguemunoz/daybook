@@ -1,9 +1,16 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+declare global {
+  interface Window {
+    Clerk?: { session?: { getToken(): Promise<string | null> } | null };
+  }
+}
+
+export async function apiRequest(path: string, init?: RequestInit): Promise<Response> {
+  const token = await window.Clerk?.session?.getToken();
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
+    headers: { 'content-type': 'application/json', ...(token && { authorization: `Bearer ${token}` }), ...(init?.headers ?? {}) },
   });
 
   if (!response.ok) {
@@ -11,6 +18,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new Error(`API ${response.status}: ${body}`);
   }
 
+  return response;
+}
+
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await apiRequest(path, init);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

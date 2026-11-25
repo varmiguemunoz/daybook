@@ -1,9 +1,30 @@
 import { Icon } from './Icon';
 
 const ICONS = [
-  'users', 'users-round', 'palette', 'code', 'megaphone', 'target', 'folder', 'folder-kanban',
-  'star', 'heart', 'zap', 'shield', 'rocket', 'globe', 'smartphone', 'layout-grid',
-  'briefcase', 'building-2', 'calendar', 'clock', 'mail', 'message-square', 'settings', 'wrench',
+  'users',
+  'users-round',
+  'palette',
+  'code',
+  'megaphone',
+  'target',
+  'folder',
+  'folder-kanban',
+  'star',
+  'heart',
+  'zap',
+  'shield',
+  'rocket',
+  'globe',
+  'smartphone',
+  'layout-grid',
+  'briefcase',
+  'building-2',
+  'calendar',
+  'clock',
+  'mail',
+  'message-square',
+  'settings',
+  'wrench',
 ];
 
 interface Props {

@@ -11,12 +11,7 @@ export async function importSeedData(): Promise<void> {
   const TaskDocument = modelFor(TaskModel);
   const ActivityDocument = modelFor(ActivityModel);
 
-  await Promise.all([
-    WorkspaceDocument.deleteMany({}),
-    MemberDocument.deleteMany({}),
-    TaskDocument.deleteMany({}),
-    ActivityDocument.deleteMany({}),
-  ]);
+  await Promise.all([WorkspaceDocument.deleteMany({}), MemberDocument.deleteMany({}), TaskDocument.deleteMany({}), ActivityDocument.deleteMany({})]);
 
   await WorkspaceDocument.insertMany([{ _id: defaultWorkspace.id, ...defaultWorkspace }]);
   await MemberDocument.insertMany(members.map(item => ({ _id: item.id, ...item })));

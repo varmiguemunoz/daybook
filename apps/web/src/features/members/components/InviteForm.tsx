@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useCreateInvitation } from '../queries';
+import type { Role } from '@gr8r/domain';
+import { useInviteMember } from '../queries';
 import { showToast } from '../../../shared/ui/Toast';
 
 export function InviteForm() {
-  const create = useCreateInvitation();
+  const create = useInviteMember();
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'member' | 'admin' | 'guest'>('member');
+  const [role, setRole] = useState<Role>('member');
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -25,7 +26,6 @@ export function InviteForm() {
       <select className="select" value={role} onChange={event => setRole(event.target.value as typeof role)} aria-label="Role">
         <option value="member">Member</option>
         <option value="admin">Admin</option>
-        <option value="guest">Guest</option>
       </select>
       <button className="btn btn-primary" type="submit" disabled={create.isPending}>
         {create.isPending ? 'Inviting…' : 'Send invitation'}

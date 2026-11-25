@@ -7,19 +7,23 @@ export async function listViews(repositories: Repositories, workspaceId: string,
   return repositories.views.listByWorkspace(workspaceId, ownerId);
 }
 
-export async function createView(repositories: Repositories, workspaceId: string, input: Omit<SavedView, 'id' | 'workspaceId' | 'createdAt' | 'updatedAt'>): Promise<SavedView> {
+export async function createView(
+  repositories: Repositories,
+  workspaceId: string,
+  input: Omit<SavedView, 'id' | 'workspaceId' | 'createdAt' | 'updatedAt'>,
+): Promise<SavedView> {
   const now = Date.now();
   const view = savedViewSchema.parse({ ...input, id: `v_${randomUUID()}`, workspaceId, createdAt: now, updatedAt: now });
   return repositories.views.create(view);
 }
 
-export async function updateView(repositories: Repositories, id: string, patch: Partial<SavedView>): Promise<SavedView> {
-  const updated = await repositories.views.update(id, patch);
+export async function updateView(repositories: Repositories, workspaceId: string, id: string, patch: Partial<SavedView>): Promise<SavedView> {
+  const updated = await repositories.views.update(workspaceId, id, patch);
   if (!updated) throw notFound('View');
   return updated;
 }
 
-export async function deleteView(repositories: Repositories, id: string): Promise<void> {
-  const removed = await repositories.views.remove(id);
+export async function deleteView(repositories: Repositories, workspaceId: string, id: string): Promise<void> {
+  const removed = await repositories.views.remove(workspaceId, id);
   if (!removed) throw notFound('View');
 }

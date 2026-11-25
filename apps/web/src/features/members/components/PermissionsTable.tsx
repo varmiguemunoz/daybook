@@ -1,15 +1,15 @@
 import { ROLE_LABELS, ROLES } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
 
-const PERMISSIONS: Array<[string, number, number, number, number]> = [
-  ['View projects & tasks', 1, 1, 1, 1],
-  ['Comment on tasks', 1, 1, 1, 1],
-  ['Create and edit tasks', 1, 1, 1, 0],
-  ['Create projects', 1, 1, 1, 0],
-  ['Invite members', 1, 1, 0, 0],
-  ['Manage roles', 1, 1, 0, 0],
-  ['Workspace settings', 1, 1, 0, 0],
-  ['Delete workspace', 1, 0, 0, 0],
+const PERMISSIONS: Array<[string, number, number]> = [
+  ['View projects & tasks', 1, 1],
+  ['Comment on tasks', 1, 1],
+  ['Create and edit tasks', 1, 1],
+  ['Create projects', 1, 1],
+  ['Delete projects', 1, 0],
+  ['Invite members', 1, 0],
+  ['Manage roles', 1, 0],
+  ['Workspace settings', 1, 0],
 ];
 
 export function PermissionsTable() {

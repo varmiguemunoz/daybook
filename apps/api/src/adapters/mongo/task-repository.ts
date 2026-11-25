@@ -39,20 +39,20 @@ export class MongoTaskRepository {
     return documents.map((document: any) => toDomain<Task>(document) as Task);
   }
 
-  async findById(id: string): Promise<Task | null> {
-    return toDomain<Task>(await TaskDocument.findById(id).lean());
+  async findById(workspaceId: string, id: string): Promise<Task | null> {
+    return toDomain<Task>(await TaskDocument.findOne({ _id: id, workspaceId }).lean());
   }
 
   async create(task: Task): Promise<Task> {
     return toDomain<Task>(await TaskDocument.create({ _id: task.id, ...task })) as Task;
   }
 
-  async update(id: string, patch: Partial<Task>): Promise<Task | null> {
-    return toDomain<Task>(await TaskDocument.findByIdAndUpdate(id, { $set: patch }, { new: true, lean: true }));
+  async update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null> {
+    return toDomain<Task>(await TaskDocument.findOneAndUpdate({ _id: id, workspaceId }, { $set: patch }, { new: true, lean: true }));
   }
 
-  async remove(id: string): Promise<boolean> {
-    const result = await TaskDocument.deleteOne({ _id: id });
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    const result = await TaskDocument.deleteOne({ _id: id, workspaceId });
     return result.deletedCount === 1;
   }
 }

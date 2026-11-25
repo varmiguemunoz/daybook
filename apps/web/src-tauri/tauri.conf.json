@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Gr8r Studio",
+  "productName": "Daybook",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.alimunozadvisory.daybook",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5175",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Gr8r Studio",
+        "title": "Daybook",
         "width": 800,
         "height": 600,
         "resizable": true,
@@ -20,7 +20,16 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+        "connect-src": "'self' ipc: http://ipc.localhost http://localhost:3001 https://*.clerk.accounts.dev",
+        "img-src": "'self' data: https://img.clerk.com",
+        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src": "'self' https://fonts.gstatic.com",
+        "frame-src": "https://challenges.cloudflare.com",
+        "worker-src": "'self' blob:"
+      }
     }
   },
   "bundle": {

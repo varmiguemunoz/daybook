@@ -17,7 +17,7 @@ export const memberSchema = z.object({
   status: z.enum(MEMBER_STATUSES).default('active'),
   timezone: z.string().max(64).default('UTC'),
   lastSeenAt: timestampSchema.nullable().default(null),
-  clerkUserId: idSchema.nullable().default(null),
+  clerkUserId: idSchema,
   preferences: preferencesSchema.optional(),
 });
 
@@ -33,3 +33,7 @@ export const memberSummarySchema = memberSchema.pick({
 });
 
 export type MemberSummary = z.infer<typeof memberSummarySchema>;
+
+export const updateMemberInputSchema = memberSchema.pick({ title: true, timezone: true, preferences: true }).partial();
+
+export type UpdateMemberInput = z.infer<typeof updateMemberInputSchema>;

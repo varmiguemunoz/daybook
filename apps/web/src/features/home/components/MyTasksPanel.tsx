@@ -5,7 +5,7 @@ import { Icon } from '../../../shared/ui/Icon';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { PriorityIcon, StatusIcon } from '../../../shared/ui/vocab';
 import { diffDays, parseDate, relativeDate, TODAY } from '../../../shared/dates';
-import type { HomeData } from './HomePage';
+import type { HomeData } from '../home-data';
 
 type Tab = 'upcoming' | 'overdue' | 'completed';
 

@@ -8,6 +8,16 @@
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  --clerk-color-primary: var(--accent);
+  --clerk-color-foreground: var(--text);
+  --clerk-color-muted-foreground: var(--text-3);
+  --clerk-color-background: var(--surface);
+  --clerk-color-input: var(--surface);
+  --clerk-color-input-foreground: var(--text);
+  --clerk-color-neutral: var(--text);
+  --clerk-color-danger: var(--red);
+  --clerk-font-family: var(--font);
+  --clerk-border-radius: var(--r);
 }
 .auth-top {
   display: flex;

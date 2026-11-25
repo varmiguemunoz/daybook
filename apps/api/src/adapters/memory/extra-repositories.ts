@@ -9,52 +9,51 @@ import type {
 } from '../../ports/repositories';
 import type { Collection } from './collection';
 
-
 export class MemoryTeamRepository implements TeamRepository {
   constructor(private readonly items: Collection<Team>) {}
 
   async listByWorkspace(workspaceId: string): Promise<Team[]> {
-    return this.items.all().filter(team => team.workspaceId === workspaceId);
+    return this.items.filter({ workspaceId });
   }
 
-  async findById(id: string): Promise<Team | null> {
-    return this.items.find(id);
+  async findById(workspaceId: string, id: string): Promise<Team | null> {
+    return this.items.find(id, { workspaceId });
   }
 
   async create(team: Team): Promise<Team> {
     return this.items.insert(team);
   }
 
-  async update(id: string, patch: Partial<Team>): Promise<Team | null> {
-    return this.items.patch(id, patch);
+  async update(workspaceId: string, id: string, patch: Partial<Team>): Promise<Team | null> {
+    return this.items.patch(id, patch, { workspaceId });
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }
 
 export class MemoryCommentRepository implements CommentRepository {
   constructor(private readonly items: Collection<Comment>) {}
 
-  async listByTask(taskId: string): Promise<Comment[]> {
-    return this.items.all().filter(comment => comment.taskId === taskId).sort((a, b) => a.createdAt - b.createdAt);
+  async listByTask(workspaceId: string, taskId: string): Promise<Comment[]> {
+    return this.items.filter({ workspaceId, taskId }).sort((a, b) => a.createdAt - b.createdAt);
   }
 
-  async findById(id: string): Promise<Comment | null> {
-    return this.items.find(id);
+  async findById(workspaceId: string, id: string): Promise<Comment | null> {
+    return this.items.find(id, { workspaceId });
   }
 
   async create(comment: Comment): Promise<Comment> {
     return this.items.insert(comment);
   }
 
-  async update(id: string, patch: Partial<Comment>): Promise<Comment | null> {
-    return this.items.patch(id, patch);
+  async update(workspaceId: string, id: string, patch: Partial<Comment>): Promise<Comment | null> {
+    return this.items.patch(id, patch, { workspaceId });
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }
 
@@ -62,23 +61,23 @@ export class MemoryFileRepository implements FileRepository {
   constructor(private readonly items: Collection<FileRecord>) {}
 
   async listByWorkspace(workspaceId: string): Promise<FileRecord[]> {
-    return this.items.all().filter(file => file.workspaceId === workspaceId).sort((a, b) => b.at - a.at);
+    return this.items.filter({ workspaceId }).sort((a, b) => b.at - a.at);
   }
 
-  async listByTask(taskId: string): Promise<FileRecord[]> {
-    return this.items.all().filter(file => file.taskId === taskId).sort((a, b) => b.at - a.at);
+  async listByTask(workspaceId: string, taskId: string): Promise<FileRecord[]> {
+    return this.items.filter({ workspaceId, taskId }).sort((a, b) => b.at - a.at);
   }
 
-  async findById(id: string): Promise<FileRecord | null> {
-    return this.items.find(id);
+  async findById(workspaceId: string, id: string): Promise<FileRecord | null> {
+    return this.items.find(id, { workspaceId });
   }
 
   async create(file: FileRecord): Promise<FileRecord> {
     return this.items.insert(file);
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }
 
@@ -87,26 +86,21 @@ export class MemoryCalendarEventRepository implements CalendarEventRepository {
 
   async listByWorkspace(workspaceId: string, from?: string, to?: string): Promise<CalendarEvent[]> {
     return this.items
-      .all()
-      .filter(event => event.workspaceId === workspaceId)
+      .filter({ workspaceId })
       .filter(event => (!from || event.date >= from) && (!to || event.date <= to))
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-  }
-
-  async findById(id: string): Promise<CalendarEvent | null> {
-    return this.items.find(id);
   }
 
   async create(event: CalendarEvent): Promise<CalendarEvent> {
     return this.items.insert(event);
   }
 
-  async update(id: string, patch: Partial<CalendarEvent>): Promise<CalendarEvent | null> {
-    return this.items.patch(id, patch);
+  async update(workspaceId: string, id: string, patch: Partial<CalendarEvent>): Promise<CalendarEvent | null> {
+    return this.items.patch(id, patch, { workspaceId });
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }
 
@@ -114,26 +108,19 @@ export class MemorySavedViewRepository implements SavedViewRepository {
   constructor(private readonly items: Collection<SavedView>) {}
 
   async listByWorkspace(workspaceId: string, ownerId?: string): Promise<SavedView[]> {
-    return this.items
-      .all()
-      .filter(view => view.workspaceId === workspaceId)
-      .filter(view => !ownerId || view.ownerId === ownerId);
-  }
-
-  async findById(id: string): Promise<SavedView | null> {
-    return this.items.find(id);
+    return this.items.filter(ownerId ? { workspaceId, ownerId } : { workspaceId });
   }
 
   async create(view: SavedView): Promise<SavedView> {
     return this.items.insert(view);
   }
 
-  async update(id: string, patch: Partial<SavedView>): Promise<SavedView | null> {
-    return this.items.patch(id, patch);
+  async update(workspaceId: string, id: string, patch: Partial<SavedView>): Promise<SavedView | null> {
+    return this.items.patch(id, patch, { workspaceId });
   }
 
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
   }
 }
 
@@ -141,15 +128,7 @@ export class MemoryNotificationRepository implements NotificationRepository {
   constructor(private readonly items: Collection<Notification>) {}
 
   async listByUser(userId: string, unreadOnly?: boolean): Promise<Notification[]> {
-    return this.items
-      .all()
-      .filter(notification => notification.userId === userId)
-      .filter(notification => !unreadOnly || !notification.read)
-      .sort((a, b) => b.at - a.at);
-  }
-
-  async findById(id: string): Promise<Notification | null> {
-    return this.items.find(id);
+    return this.items.filter(unreadOnly ? { userId, read: false } : { userId }).sort((a, b) => b.at - a.at);
   }
 
   async create(notification: Notification): Promise<Notification> {
@@ -160,22 +139,13 @@ export class MemoryNotificationRepository implements NotificationRepository {
     return this.items.patch(id, patch);
   }
 
-  async markRead(id: string): Promise<Notification | null> {
-    return this.items.patch(id, { read: true });
+  async markRead(userId: string, id: string): Promise<Notification | null> {
+    return this.items.patch(id, { read: true }, { userId });
   }
 
   async markAllRead(userId: string): Promise<number> {
-    let count = 0;
-    for (const item of this.items.all()) {
-      if (item.userId === userId && !item.read) {
-        this.items.patch(item.id, { read: true });
-        count += 1;
-      }
-    }
-    return count;
-  }
-
-  async remove(id: string): Promise<boolean> {
-    return this.items.remove(id);
+    const unread = this.items.filter({ userId, read: false });
+    unread.forEach(item => this.items.patch(item.id, { read: true }));
+    return unread.length;
   }
 }

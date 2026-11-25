@@ -1,7 +1,7 @@
 import type { Activity, Member, Task } from '@gr8r/domain';
 import { Avatar } from '../../../shared/ui/Avatar';
 import { timeAgo } from '../../../shared/dates';
-import type { HomeData } from './HomePage';
+import type { HomeData } from '../home-data';
 
 interface EntryProps {
   entry: Activity;

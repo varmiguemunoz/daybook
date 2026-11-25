@@ -1,4 +1,4 @@
-export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 500;
+export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500;
 
 export class AppError extends Error {
   constructor(
@@ -21,6 +21,10 @@ export function forbidden(action: string): AppError {
 
 export function unauthorized(): AppError {
   return new AppError(401, 'Sign in to continue');
+}
+
+export function organizationRequired(): AppError {
+  return new AppError(403, 'Select an organization to continue');
 }
 
 export function invalidInput(issues: unknown): AppError {

@@ -6,13 +6,19 @@ import { recordActivity } from '../activity/activity-service';
 import { notify } from '../notifications/notification-service';
 import { emit } from '../../shared/events/bus';
 
-export async function listComments(repositories: Repositories, taskId: string): Promise<Comment[]> {
-  return repositories.comments.listByTask(taskId);
+export async function listComments(repositories: Repositories, workspaceId: string, taskId: string): Promise<Comment[]> {
+  return repositories.comments.listByTask(workspaceId, taskId);
 }
 
-async function notifyAssignee(repositories: Repositories, task: { id: string; assigneeId: string | null; key: string; title: string; projectId: string | null }, workspaceId: string, authorId: string, body: string): Promise<void> {
+async function notifyAssignee(
+  repositories: Repositories,
+  task: { id: string; assigneeId: string | null; key: string; title: string; projectId: string | null },
+  workspaceId: string,
+  authorId: string,
+  body: string,
+): Promise<void> {
   if (!task.assigneeId || task.assigneeId === authorId) return;
-  const assignee = await repositories.members.findById(task.assigneeId);
+  const assignee = await repositories.members.findById(workspaceId, task.assigneeId);
   if (!assignee) return;
   await notify(repositories, {
     workspaceId,
@@ -30,8 +36,14 @@ async function notifyAssignee(repositories: Repositories, task: { id: string; as
   });
 }
 
-export async function createComment(repositories: Repositories, workspaceId: string, taskId: string, authorId: string, input: CreateCommentInput): Promise<Comment> {
-  const task = await repositories.tasks.findById(taskId);
+export async function createComment(
+  repositories: Repositories,
+  workspaceId: string,
+  taskId: string,
+  authorId: string,
+  input: CreateCommentInput,
+): Promise<Comment> {
+  const task = await repositories.tasks.findById(workspaceId, taskId);
   if (!task) throw notFound('Task');
 
   const comment = commentSchema.parse({
@@ -59,28 +71,26 @@ export async function createComment(repositories: Repositories, workspaceId: str
   return created;
 }
 
-export async function updateComment(repositories: Repositories, id: string, body: string): Promise<Comment> {
-  const current = await repositories.comments.findById(id);
-  if (!current) throw notFound('Comment');
-  const updated = await repositories.comments.update(id, { body, editedAt: Date.now() });
+export async function updateComment(repositories: Repositories, workspaceId: string, id: string, body: string): Promise<Comment> {
+  const updated = await repositories.comments.update(workspaceId, id, { body, editedAt: Date.now() });
   if (!updated) throw notFound('Comment');
   return updated;
 }
 
-export async function deleteComment(repositories: Repositories, id: string): Promise<void> {
-  const removed = await repositories.comments.remove(id);
+export async function deleteComment(repositories: Repositories, workspaceId: string, id: string): Promise<void> {
+  const removed = await repositories.comments.remove(workspaceId, id);
   if (!removed) throw notFound('Comment');
 }
 
-export async function toggleReaction(repositories: Repositories, commentId: string, memberId: string, emoji: string): Promise<Comment> {
-  const current = await repositories.comments.findById(commentId);
+export async function toggleReaction(repositories: Repositories, workspaceId: string, commentId: string, memberId: string, emoji: string): Promise<Comment> {
+  const current = await repositories.comments.findById(workspaceId, commentId);
   if (!current) throw notFound('Comment');
   const reactions = { ...current.reactions };
   const list = reactions[emoji] ?? [];
   const next = list.includes(memberId) ? list.filter(id => id !== memberId) : [...list, memberId];
   if (next.length === 0) delete reactions[emoji];
   else reactions[emoji] = next;
-  const updated = await repositories.comments.update(commentId, { reactions });
+  const updated = await repositories.comments.update(workspaceId, commentId, { reactions });
   if (!updated) throw notFound('Comment');
   return updated;
 }

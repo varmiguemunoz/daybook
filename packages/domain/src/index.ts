@@ -14,4 +14,3 @@ export * from './schemas/activity';
 export * from './schemas/file';
 export * from './schemas/filters';
 export * from './schemas/preferences';
-export * from './schemas/invitation';
