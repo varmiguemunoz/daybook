@@ -1,6 +1,8 @@
+import { useDroppable } from '@dnd-kit/core';
 import type { Member, Task } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
 import { WD, diffDays, isoDate, TODAY } from '../../../shared/dates';
+import { useTaskUi } from '../../tasks/task-ui-store';
 import { WeekChip } from './CalendarChips';
 
 interface Props {
@@ -13,6 +15,8 @@ function WeekColumn({ day, tasks, members }: Omit<Props, 'days'> & { day: Date }
   const key = isoDate(day);
   const isToday = diffDays(day, TODAY) === 0;
   const items = tasks.filter(task => task.dueDate === key);
+  const { setNodeRef, isOver } = useDroppable({ id: key });
+  const openComposer = useTaskUi(state => state.openComposer);
 
   return (
     <div className="wcol">
@@ -22,11 +26,11 @@ function WeekColumn({ day, tasks, members }: Omit<Props, 'days'> & { day: Date }
           {WD[day.getDay()]}
         </span>
         <span className="sp" />
-        <button className="ibtn ibtn-xs" type="button" aria-label="Add task">
+        <button className="ibtn ibtn-xs" type="button" aria-label={`Add task on ${key}`} onClick={() => openComposer({ dueDate: key })}>
           <Icon name="plus" size={13} />
         </button>
       </div>
-      <div className="wcol-b">
+      <div ref={setNodeRef} className={`wcol-b ${isOver ? 'over' : ''}`.trim()}>
         {items.length ? (
           items.map(task => <WeekChip key={task.id} task={task} assignee={task.assigneeId ? members.get(task.assigneeId) : undefined} />)
         ) : (

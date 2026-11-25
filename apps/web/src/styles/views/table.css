@@ -88,6 +88,9 @@ table.tbl {
 .tbl td.cellbtn {
   cursor: pointer;
 }
+.tbl tr.sel td {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
 .tbl .grow-row td {
   background: var(--sunken);
   font-weight: 600;

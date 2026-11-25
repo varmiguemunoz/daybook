@@ -14,13 +14,19 @@ export async function getTeam(repositories: Repositories, workspaceId: string, i
   return team;
 }
 
+async function workspaceMemberIds(repositories: Repositories, workspaceId: string, ids: string[] | undefined): Promise<string[] | undefined> {
+  if (!ids) return undefined;
+  const members = await repositories.members.listByWorkspace(workspaceId);
+  return ids.filter(id => members.some(member => member.id === id));
+}
+
 export async function createTeam(repositories: Repositories, workspaceId: string, input: CreateTeamInput, actorId: string): Promise<Team> {
   const now = Date.now();
   const team = teamSchema.parse({
     ...input,
     id: `team_${randomUUID()}`,
     workspaceId,
-    memberIds: input.memberIds ?? [],
+    memberIds: (await workspaceMemberIds(repositories, workspaceId, input.memberIds)) ?? [],
     createdAt: now,
     updatedAt: now,
   });
@@ -35,21 +41,20 @@ async function saveTeam(repositories: Repositories, workspaceId: string, id: str
   return updated;
 }
 
-export function updateTeam(repositories: Repositories, workspaceId: string, id: string, input: UpdateTeamInput): Promise<Team> {
-  return saveTeam(repositories, workspaceId, id, input);
+export async function updateTeam(repositories: Repositories, workspaceId: string, id: string, input: UpdateTeamInput): Promise<Team> {
+  const memberIds = await workspaceMemberIds(repositories, workspaceId, input.memberIds);
+  return saveTeam(repositories, workspaceId, id, memberIds ? { ...input, memberIds } : input);
 }
 
 export async function deleteTeam(repositories: Repositories, workspaceId: string, id: string, actorId: string): Promise<void> {
   const team = await getTeam(repositories, workspaceId, id);
-  const members = await repositories.members.listByWorkspace(workspaceId);
-  await Promise.all(members.filter(member => member.teamId === id).map(member => repositories.members.update(workspaceId, member.id, { teamId: null })));
   await repositories.teams.remove(workspaceId, id);
   await recordActivity(repositories, { workspaceId, actorId, verb: 'deleted', detail: team.name });
 }
 
 export async function addMemberToTeam(repositories: Repositories, workspaceId: string, teamId: string, memberId: string): Promise<Team> {
   const team = await getTeam(repositories, workspaceId, teamId);
-  const member = await repositories.members.update(workspaceId, memberId, { teamId });
+  const member = await repositories.members.findById(workspaceId, memberId);
   if (!member) throw notFound('Member');
   const memberIds = team.memberIds.includes(memberId) ? team.memberIds : [...team.memberIds, memberId];
   return saveTeam(repositories, workspaceId, teamId, { memberIds });
@@ -57,6 +62,5 @@ export async function addMemberToTeam(repositories: Repositories, workspaceId: s
 
 export async function removeMemberFromTeam(repositories: Repositories, workspaceId: string, teamId: string, memberId: string): Promise<Team> {
   const team = await getTeam(repositories, workspaceId, teamId);
-  await repositories.members.update(workspaceId, memberId, { teamId: null });
   return saveTeam(repositories, workspaceId, teamId, { memberIds: team.memberIds.filter(id => id !== memberId) });
 }

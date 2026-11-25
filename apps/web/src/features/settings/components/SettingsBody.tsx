@@ -1,52 +1,48 @@
 import type { ReactNode } from 'react';
-import { useMembers } from '../../members/queries';
-import { useTasks } from '../../tasks/queries';
+import { Skeleton } from '../../../shared/ui/Skeleton';
 import { useBootstrap } from '../../workspace/queries';
-import { MembersTable } from '../../members/components/MembersTable';
-import { TeamsGrid } from '../../members/components/TeamsGrid';
+import { MembersSection } from '../../members/components/MembersSection';
 import { PermissionsTable } from '../../members/components/PermissionsTable';
+import { TeamsManager } from '../../teams/components/TeamsManager';
 import { AppearanceSection } from './AppearanceSection';
 import { WorkspaceSection } from './WorkspaceSection';
 import { ProfileSection } from './ProfileSection';
 import { ShortcutsSection } from './ShortcutsSection';
 
-function SectionHead({ title, lead }: { title: string; lead: string }) {
+function Section({ title, lead, children }: { title: string; lead: string; children: ReactNode }) {
   return (
     <>
       <h1>{title}</h1>
       <p className="lead">{lead}</p>
+      {children}
     </>
   );
 }
 
-export function SettingsBody({ section }: { section: string }) {
-  const { data: members = [] } = useMembers();
-  const { data: tasks = [] } = useTasks();
-  const { data: bootstrap } = useBootstrap();
-  const me = bootstrap?.me;
-  const meId = me?.id ?? '';
+function ProfileLoader() {
+  const { data } = useBootstrap();
+  return data ? <ProfileSection key={data.me.id} me={data.me} /> : <Skeleton lines={6} />;
+}
 
+export function SettingsBody({ section }: { section: string }) {
   const sections: Record<string, ReactNode> = {
     appearance: <AppearanceSection />,
     members: (
-      <>
-        <SectionHead title="Members" lead="People with access to this workspace." />
-        <MembersTable members={members} tasks={tasks} meId={meId} />
-      </>
+      <Section title="Members" lead="People with access to this workspace.">
+        <MembersSection />
+      </Section>
     ),
     teams: (
-      <>
-        <SectionHead title="Teams" lead="Groups of people who work together." />
-        <TeamsGrid teams={[]} members={members} onOpen={() => {}} />
-      </>
+      <Section title="Teams" lead="Groups of people who work together. A person can be in several teams.">
+        <TeamsManager />
+      </Section>
     ),
     permissions: (
-      <>
-        <SectionHead title="Permissions" lead="What each role can do in this workspace." />
+      <Section title="Permissions" lead="What each role can do in this workspace.">
         <PermissionsTable />
-      </>
+      </Section>
     ),
-    profile: <ProfileSection me={me} />,
+    profile: <ProfileLoader />,
     shortcuts: <ShortcutsSection />,
   };
 

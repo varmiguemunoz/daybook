@@ -31,3 +31,7 @@ export const calendarEventSchema = z.object({
 });
 
 export type CalendarEvent = z.infer<typeof calendarEventSchema>;
+
+export const createCalendarEventInputSchema = calendarEventSchema.omit({ id: true, workspaceId: true });
+
+export const updateCalendarEventInputSchema = createCalendarEventInputSchema.extend({ projectId: idSchema.nullable() }).partial();

@@ -33,6 +33,11 @@ export class MongoMemberRepository {
   async updateByClerkUserId(clerkUserId: string, patch: Partial<Member>): Promise<void> {
     await MemberDocument.updateMany({ clerkUserId }, { $set: patch });
   }
+
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    const result = await MemberDocument.deleteOne({ _id: id, workspaceId });
+    return result.deletedCount > 0;
+  }
 }
 
 export class MongoWorkspaceRepository {

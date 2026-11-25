@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { taskSchema, type ActivityVerb, type CreateTaskInput, type Task, type TaskQuery, type UpdateTaskInput, type Workspace } from '@gr8r/domain';
 import type { Repositories } from '../../ports/repositories';
-import { notFound } from '../../http/errors';
+import { invalidInput, notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';
 import { notify } from '../notifications/notification-service';
 import { emit } from '../../shared/events/bus';
@@ -78,7 +78,14 @@ function buildTask(input: CreateTaskInput, workspace: Workspace, order: number, 
   });
 }
 
+async function assertAssignee(repositories: Repositories, workspaceId: string, assigneeId: string | null | undefined): Promise<void> {
+  if (!assigneeId) return;
+  const member = await repositories.members.findById(workspaceId, assigneeId);
+  if (member?.status !== 'active') throw invalidInput([{ path: 'assigneeId', message: 'Assignee is not an active member of this workspace' }]);
+}
+
 export async function createTask(repositories: Repositories, workspace: Workspace, input: CreateTaskInput, actorId: string): Promise<Task> {
+  await assertAssignee(repositories, workspace.id, input.assigneeId);
   const siblings = await repositories.tasks.list(workspace.id, {});
   const { order, number } = nextPosition(siblings);
   const task = buildTask(input, workspace, order, number);
@@ -118,6 +125,7 @@ function verbFor(current: Task, next: Task): ActivityVerb {
 
 export async function updateTask(repositories: Repositories, workspace: Workspace, id: string, input: UpdateTaskInput, actorId: string): Promise<Task> {
   const current = await getTask(repositories, workspace.id, id);
+  await assertAssignee(repositories, workspace.id, input.assigneeId);
   const updated = await repositories.tasks.update(workspace.id, id, taskPatch(current, input));
   if (!updated) throw notFound('Task');
 

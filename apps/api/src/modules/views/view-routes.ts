@@ -1,12 +1,9 @@
 import { Hono } from 'hono';
-import { savedViewSchema } from '@gr8r/domain';
+import { createSavedViewInputSchema, updateSavedViewInputSchema } from '@gr8r/domain';
 import type { Repositories } from '../../ports/repositories';
 import { requestContext } from '../../http/context';
 import { parseBody, readJson } from '../../http/validate';
 import { createView, deleteView, listViews, updateView } from './view-service';
-
-const createViewSchema = savedViewSchema.omit({ id: true, workspaceId: true, ownerId: true });
-const updateViewSchema = createViewSchema.partial();
 
 export function viewRoutes(repositories: Repositories): Hono {
   const routes = new Hono();
@@ -19,13 +16,13 @@ export function viewRoutes(repositories: Repositories): Hono {
 
   routes.post('/', async context => {
     const { workspace, member } = await requestContext(repositories, context);
-    const input = parseBody(createViewSchema, await readJson(context));
+    const input = parseBody(createSavedViewInputSchema, await readJson(context));
     return context.json(await createView(repositories, workspace.id, { ...input, ownerId: member.id }), 201);
   });
 
   routes.patch('/:id', async context => {
     const { workspace } = await requestContext(repositories, context);
-    const input = parseBody(updateViewSchema, await readJson(context));
+    const input = parseBody(updateSavedViewInputSchema, await readJson(context));
     return context.json(await updateView(repositories, workspace.id, context.req.param('id'), input));
   });
 

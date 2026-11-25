@@ -5,7 +5,8 @@ import type { Repositories } from './ports/repositories';
 import { AppError } from './http/errors';
 import { taskRoutes } from './modules/tasks/task-routes';
 import { workspaceRoutes } from './modules/workspace/workspace-routes';
-import { memberRoutes } from './modules/members/member-routes';
+import { memberRoutes, type RemoveMembership } from './modules/members/member-routes';
+import type { ConfirmMembership } from './http/auth';
 import { teamRoutes } from './modules/teams/team-routes';
 import { commentRoutes } from './modules/comments/comment-routes';
 import { eventRoutes } from './modules/events/event-routes';
@@ -19,6 +20,8 @@ import { clerkWebhookRoutes } from './modules/webhooks/clerk-routes';
 export interface AppDependencies {
   repositories: Repositories;
   authenticate: MiddlewareHandler;
+  removeMembership: RemoveMembership;
+  confirmMembership: ConfirmMembership;
   allowedOrigins: string[];
   webhookSigningSecret: string;
 }
@@ -38,11 +41,11 @@ const rateLimit: MiddlewareHandler = async (context, next) => {
   await next();
 };
 
-function apiRoutes(repositories: Repositories): Hono {
+function apiRoutes(repositories: Repositories, removeMembership: RemoveMembership): Hono {
   const api = new Hono();
   api.route('/tasks', taskRoutes(repositories));
   api.route('/', workspaceRoutes(repositories));
-  api.route('/members', memberRoutes(repositories));
+  api.route('/members', memberRoutes(repositories, removeMembership));
   api.route('/teams', teamRoutes(repositories));
   api.route('/comments', commentRoutes(repositories));
   api.route('/events/stream', streamRoutes(repositories));
@@ -63,7 +66,7 @@ function handleError(error: Error, context: Context) {
   return context.json({ error: { message: 'Unexpected server error', issues: null } }, 500);
 }
 
-export function createApp({ repositories, authenticate, allowedOrigins, webhookSigningSecret }: AppDependencies): Hono {
+export function createApp({ repositories, authenticate, removeMembership, confirmMembership, allowedOrigins, webhookSigningSecret }: AppDependencies): Hono {
   const app = new Hono();
 
   app.use('*', secureHeaders());
@@ -71,8 +74,11 @@ export function createApp({ repositories, authenticate, allowedOrigins, webhookS
   app.route('/webhooks/clerk', clerkWebhookRoutes(repositories, webhookSigningSecret));
 
   app.use('/api/*', cors({ origin: allowedOrigins, credentials: true, allowHeaders: ['authorization', 'content-type'] }));
-  app.use('/api/*', authenticate, rateLimit);
-  app.route('/api', apiRoutes(repositories));
+  app.use('/api/*', authenticate, rateLimit, async (context, next) => {
+    context.set('confirmMembership', confirmMembership);
+    await next();
+  });
+  app.route('/api', apiRoutes(repositories, removeMembership));
 
   app.notFound(context => context.json({ error: { message: `No route for ${context.req.path}`, issues: null } }, 404));
   app.onError(handleError);

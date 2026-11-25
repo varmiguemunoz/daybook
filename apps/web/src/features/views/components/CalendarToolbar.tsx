@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Icon } from '../../../shared/ui/Icon';
 
 export type CalendarMode = 'month' | 'week';
@@ -8,9 +9,10 @@ interface Props {
   onMode: (mode: CalendarMode) => void;
   onShift: (months: number) => void;
   onToday: () => void;
+  tools?: ReactNode;
 }
 
-export function CalendarToolbar({ mode, label, onMode, onShift, onToday }: Props) {
+export function CalendarToolbar({ mode, label, onMode, onShift, onToday, tools }: Props) {
   return (
     <div className="toolbar" style={{ gap: 8 }}>
       <button className="btn btn-secondary btn-sm" type="button" onClick={onToday}>
@@ -28,6 +30,7 @@ export function CalendarToolbar({ mode, label, onMode, onShift, onToday }: Props
         {label}
       </h2>
       <span className="sp" />
+      {tools}
       <div className="seg">
         {(['month', 'week'] as const).map(value => (
           <button key={value} type="button" className={mode === value ? 'on' : ''} onClick={() => onMode(value)}>

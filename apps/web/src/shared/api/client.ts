@@ -29,7 +29,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
 export const queryKeys = {
   bootstrap: ['bootstrap'] as const,
-  tasks: (filters?: Record<string, unknown>) => ['tasks', filters ?? {}] as const,
+  tasks: ['tasks'] as const,
   task: (id: string) => ['task', id] as const,
   projects: ['projects'] as const,
   project: (id: string) => ['project', id] as const,

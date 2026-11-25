@@ -3,7 +3,9 @@ import type { Member, Task } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { TaskCells } from './TableCells';
-import { groupTasks, sortTasks, type GroupBy, type SortBy, type TaskGroup } from '../view-model';
+import { groupDefaults, groupTasks, sortTasks, type GroupBy, type SortBy, type TaskGroup } from '../view-model';
+import { useTaskUi } from '../../tasks/task-ui-store';
+import type { useTaskSelection } from '../../tasks/use-task-selection';
 
 export interface TableColumn {
   id: string;
@@ -12,7 +14,7 @@ export interface TableColumn {
 }
 
 export const TABLE_COLUMNS: TableColumn[] = [
-  { id: 'title', label: 'Task', width: 314 },
+  { id: 'title', label: 'Task', width: 340 },
   { id: 'status', label: 'Status', width: 132 },
   { id: 'priority', label: 'Priority', width: 112 },
   { id: 'assignee', label: 'Assignee', width: 156 },
@@ -21,22 +23,29 @@ export const TABLE_COLUMNS: TableColumn[] = [
   { id: 'estimate', label: 'Estimate', width: 92 },
 ];
 
+const COLUMN_IDS = TABLE_COLUMNS.map(column => column.id);
+
 interface Props {
   tasks: Task[];
-  members: Map<string, Member>;
+  members: Member[];
+  memberById: Map<string, Member>;
   group: GroupBy;
   sort: SortBy;
-  onOpen: (task: Task) => void;
+  selection: ReturnType<typeof useTaskSelection>;
 }
 
-function TableHead() {
+function TableHead({ selection }: Pick<Props, 'selection'>) {
   return (
     <thead>
       <tr>
         {TABLE_COLUMNS.map(column => (
           <th key={column.id} className={column.id === 'title' ? 'sticky' : ''} scope="col" style={{ width: column.width }}>
-            <div className="thi">{column.label}</div>
-            <span className="rsz" aria-hidden="true" />
+            <div className="thi">
+              {column.id === 'title' && (
+                <input type="checkbox" className="check" aria-label="Select all tasks" checked={selection.allSelected} onChange={selection.toggleAll} />
+              )}
+              {column.label}
+            </div>
           </th>
         ))}
       </tr>
@@ -44,65 +53,67 @@ function TableHead() {
   );
 }
 
-function TaskRow({ task, members, onOpen }: { task: Task } & Pick<Props, 'members' | 'onOpen'>) {
-  return (
-    <tr data-id={task.id} onClick={() => onOpen(task)} style={{ cursor: 'pointer' }}>
-      <TaskCells
-        columns={TABLE_COLUMNS.map(column => column.id)}
-        context={{
-          task,
-          assignee: task.assigneeId ? members.get(task.assigneeId) : undefined,
-        }}
-      />
-    </tr>
-  );
-}
+function GroupHeading({ group, entry }: { group: GroupBy; entry: TaskGroup }) {
+  const openComposer = useTaskUi(state => state.openComposer);
 
-function GroupHeading({ name, count }: { name: string; count: number }) {
   return (
     <tr className="grow-row">
       <td className="sticky" colSpan={TABLE_COLUMNS.length}>
         <span className="row" style={{ gap: 6 }}>
-          {name}
+          {entry.name}
           <span className="faint" style={{ fontWeight: 500 }}>
-            {count}
+            {entry.tasks.length}
           </span>
+          <button className="ibtn ibtn-xs" type="button" aria-label={`Add task to ${entry.name}`} onClick={() => openComposer(groupDefaults(group, entry.key))}>
+            <Icon name="plus" size={13} />
+          </button>
         </span>
       </td>
     </tr>
   );
 }
 
-function TableBody({ groups, group, members, onOpen }: { groups: TaskGroup[]; group: GroupBy } & Pick<Props, 'members' | 'onOpen'>) {
+function TableBody({ groups, group, members, memberById, selection }: { groups: TaskGroup[] } & Omit<Props, 'tasks' | 'sort'>) {
+  const openTask = useTaskUi(state => state.openTask);
+  const openComposer = useTaskUi(state => state.openComposer);
+
   return (
     <tbody>
       {groups.map(entry => (
         <Fragment key={entry.key}>
-          {group !== 'none' && <GroupHeading name={entry.name} count={entry.tasks.length} />}
+          {group !== 'none' && <GroupHeading group={group} entry={entry} />}
           {entry.tasks.map(task => (
-            <TaskRow key={task.id} task={task} members={members} onOpen={onOpen} />
+            <tr key={task.id} className={selection.isSelected(task.id) ? 'sel' : ''} onClick={() => openTask(task.id)} style={{ cursor: 'pointer' }}>
+              <TaskCells
+                columns={COLUMN_IDS}
+                context={{
+                  task,
+                  assignee: task.assigneeId ? memberById.get(task.assigneeId) : undefined,
+                  members,
+                  selected: selection.isSelected(task.id),
+                  onSelect: () => selection.toggle(task.id),
+                }}
+              />
+            </tr>
           ))}
         </Fragment>
       ))}
       <tr>
-        <td className="sticky cellbtn" colSpan={TABLE_COLUMNS.length} style={{ color: 'var(--text-3)' }}>
-          <span className="row" style={{ gap: 6 }}>
+        <td className="sticky" colSpan={TABLE_COLUMNS.length}>
+          <button className="addrow" type="button" onClick={() => openComposer()}>
             <Icon name="plus" size={14} />
             New task
-          </span>
+          </button>
         </td>
       </tr>
     </tbody>
   );
 }
 
-export function Table({ tasks, members, group, sort, onOpen }: Props) {
-  if (!tasks.length) {
-    return <EmptyState icon="search-x" title="No results found" text="No tasks match these filters." />;
-  }
+export function Table({ tasks, members, memberById, group, sort, selection }: Props) {
+  if (!tasks.length) return <EmptyState icon="search-x" title="No tasks found" text="Create a task or adjust the search and filters." />;
 
-  const ordered = sortTasks(tasks, sort);
-  const groups = groupTasks(ordered, group, [...members.values()]);
+  const groups = groupTasks(sortTasks(tasks, sort), group, members);
   const totalWidth = TABLE_COLUMNS.reduce((sum, column) => sum + column.width, 0);
 
   return (
@@ -113,8 +124,8 @@ export function Table({ tasks, members, group, sort, onOpen }: Props) {
             <col key={column.id} style={{ width: column.width }} />
           ))}
         </colgroup>
-        <TableHead />
-        <TableBody groups={groups} group={group} members={members} onOpen={onOpen} />
+        <TableHead selection={selection} />
+        <TableBody groups={groups} group={group} members={members} memberById={memberById} selection={selection} />
       </table>
     </div>
   );

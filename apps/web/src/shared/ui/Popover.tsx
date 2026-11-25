@@ -1,6 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
+const POPOVER_MAX_WIDTH = 320;
+
 interface Props {
   open: boolean;
   anchor: HTMLElement | null;
@@ -32,9 +34,11 @@ export function Popover({ open, anchor, onClose, children, className = 'pop' }: 
 
   if (!open || !anchor) return null;
   const rect = anchor.getBoundingClientRect();
+  const vertical = rect.bottom < window.innerHeight / 2 ? { top: rect.bottom + 4 } : { bottom: window.innerHeight - rect.top + 4 };
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - POPOVER_MAX_WIDTH - 8));
 
   return createPortal(
-    <div ref={ref} className={className} style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 1000 }}>
+    <div ref={ref} className={className} style={{ position: 'fixed', ...vertical, left, zIndex: 1000 }}>
       {children}
     </div>,
     document.body,

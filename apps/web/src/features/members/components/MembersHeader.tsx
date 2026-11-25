@@ -1,5 +1,3 @@
-import { Icon } from '../../../shared/ui/Icon';
-
 export type MembersTab = 'members' | 'teams' | 'roles';
 
 const TABS: Array<[MembersTab, string]> = [
@@ -14,10 +12,9 @@ interface Props {
   workspace: string;
   total: number;
   pending: number;
-  onInvite: () => void;
 }
 
-export function MembersHeader({ tab, onTab, workspace, total, pending, onInvite }: Props) {
+export function MembersHeader({ tab, onTab, workspace, total, pending }: Props) {
   return (
     <>
       <div className="ph">
@@ -26,12 +23,6 @@ export function MembersHeader({ tab, onTab, workspace, total, pending, onInvite 
           <p>
             <span className="num">{total}</span> people in {workspace} · <span className="num">{pending}</span> pending
           </p>
-        </div>
-        <div className="acts">
-          <button className="btn btn-primary" type="button" onClick={onInvite}>
-            <Icon name="user-plus" size={14} />
-            Invite member
-          </button>
         </div>
       </div>
       <div className="tabs" style={{ marginBottom: 14 }}>

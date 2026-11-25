@@ -44,6 +44,21 @@ export const savedViewSchema = z.object({
 
 export type SavedView = z.infer<typeof savedViewSchema>;
 
+export const createSavedViewInputSchema = savedViewSchema.omit({ id: true, workspaceId: true, ownerId: true });
+
+export const updateSavedViewInputSchema = z
+  .object({
+    projectId: idSchema.nullable(),
+    name: nonEmptyText,
+    type: z.enum(VIEW_TYPES),
+    filters: z.array(filterSchema),
+    sort: sortSchema,
+    group: z.enum(GROUPINGS),
+    query: z.string().max(200),
+    hiddenColumns: z.array(z.string().max(40)),
+  })
+  .partial();
+
 export const taskQuerySchema = z.object({
   projectId: idSchema.optional(),
   status: z.array(z.enum(TASK_STATUSES)).optional(),

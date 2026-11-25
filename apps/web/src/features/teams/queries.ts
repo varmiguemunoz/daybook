@@ -1,62 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryKeys, apiFetch } from '../../shared/api/client';
 import type { CreateTeamInput, Team, UpdateTeamInput } from '@gr8r/domain';
+import { queryKeys, apiFetch } from '../../shared/api/client';
 
 export function useTeams() {
   return useQuery({ queryKey: queryKeys.teams, queryFn: () => apiFetch<Team[]>('/api/teams') });
 }
 
+function useTeamMutation<Variables>(mutationFn: (variables: Variables) => Promise<unknown>) {
+  const client = useQueryClient();
+  return useMutation({ mutationFn, onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.teams }) });
+}
+
 export function useCreateTeam() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (input: CreateTeamInput) => apiFetch<Team>('/api/teams', { method: 'POST', body: JSON.stringify(input) }),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: queryKeys.teams });
-      client.invalidateQueries({ queryKey: queryKeys.members });
-    },
-  });
+  return useTeamMutation((input: CreateTeamInput) => apiFetch<Team>('/api/teams', { method: 'POST', body: JSON.stringify(input) }));
 }
 
-export function useUpdateTeam(id: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (input: UpdateTeamInput) => apiFetch<Team>(`/api/teams/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: queryKeys.teams });
-      client.invalidateQueries({ queryKey: queryKeys.members });
-    },
-  });
+export function useUpdateTeam() {
+  return useTeamMutation(({ id, patch }: { id: string; patch: UpdateTeamInput }) =>
+    apiFetch<Team>(`/api/teams/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  );
 }
 
-export function useDeleteTeam(id: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: () => apiFetch<void>(`/api/teams/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: queryKeys.teams });
-      client.invalidateQueries({ queryKey: queryKeys.members });
-    },
-  });
+export function useDeleteTeam() {
+  return useTeamMutation((id: string) => apiFetch<void>(`/api/teams/${id}`, { method: 'DELETE' }));
 }
 
-export function useAddTeamMember(teamId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (memberId: string) => apiFetch<Team>(`/api/teams/${teamId}/members`, { method: 'POST', body: JSON.stringify({ memberId }) }),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: queryKeys.teams });
-      client.invalidateQueries({ queryKey: queryKeys.members });
-    },
-  });
+export function useAddTeamMember() {
+  return useTeamMutation(({ teamId, memberId }: { teamId: string; memberId: string }) =>
+    apiFetch<Team>(`/api/teams/${teamId}/members`, { method: 'POST', body: JSON.stringify({ memberId }) }),
+  );
 }
 
-export function useRemoveTeamMember(teamId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (memberId: string) => apiFetch<Team>(`/api/teams/${teamId}/members/${memberId}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: queryKeys.teams });
-      client.invalidateQueries({ queryKey: queryKeys.members });
-    },
-  });
+export function useRemoveTeamMember() {
+  return useTeamMutation(({ teamId, memberId }: { teamId: string; memberId: string }) =>
+    apiFetch<Team>(`/api/teams/${teamId}/members/${memberId}`, { method: 'DELETE' }),
+  );
 }

@@ -1,10 +1,15 @@
 import { Hono, type Context } from 'hono';
-import { createTaskInputSchema, taskQuerySchema, updateTaskInputSchema, type TaskQuery } from '@gr8r/domain';
+import { z } from 'zod';
+import { bulkTaskIdsSchema, bulkTaskPatchSchema, createTaskInputSchema, taskQuerySchema, updateTaskInputSchema, type TaskQuery } from '@gr8r/domain';
 import type { Repositories } from '../../ports/repositories';
 import { requestContext } from '../../http/context';
 import { requirePermission } from '../../http/actor';
 import { parseBody, parseQuery, readJson } from '../../http/validate';
 import { createTask, deleteTask, getTask, listTasks, updateTask } from './task-service';
+import { deleteTasks, updateTasks } from './task-bulk-service';
+
+const bulkUpdateSchema = z.object({ ids: bulkTaskIdsSchema, patch: bulkTaskPatchSchema });
+const bulkDeleteSchema = z.object({ ids: bulkTaskIdsSchema });
 
 const MULTI_VALUE_KEYS = new Set(['status', 'priority', 'assigneeId', 'label']);
 
@@ -17,6 +22,22 @@ function parseTaskQuery(context: Context): TaskQuery {
   }
 
   return parseQuery(taskQuerySchema, raw);
+}
+
+function registerBulkRoutes(routes: Hono, repositories: Repositories): void {
+  routes.patch('/', async context => {
+    const { workspace, member } = await requestContext(repositories, context);
+    requirePermission(member, 'task:write');
+    const { ids, patch } = parseBody(bulkUpdateSchema, await readJson(context));
+    return context.json(await updateTasks(repositories, workspace, ids, patch, member.id));
+  });
+
+  routes.delete('/', async context => {
+    const { workspace, member } = await requestContext(repositories, context);
+    requirePermission(member, 'task:write');
+    const { ids } = parseBody(bulkDeleteSchema, await readJson(context));
+    return context.json({ deleted: await deleteTasks(repositories, workspace, ids, member.id) });
+  });
 }
 
 export function taskRoutes(repositories: Repositories): Hono {
@@ -53,5 +74,6 @@ export function taskRoutes(repositories: Repositories): Hono {
     return context.body(null, 204);
   });
 
+  registerBulkRoutes(routes, repositories);
   return routes;
 }

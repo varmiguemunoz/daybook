@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ROLES } from '../vocab/role';
 import { colorSchema, emailSchema, idSchema, nonEmptyText, timestampSchema } from './primitives';
-import { preferencesSchema } from './preferences';
+import { preferencesSchema, updatePreferencesInputSchema } from './preferences';
 
 export const MEMBER_STATUSES = ['active', 'invited', 'disabled'] as const;
 
@@ -12,7 +12,6 @@ export const memberSchema = z.object({
   email: emailSchema,
   role: z.enum(ROLES),
   title: z.string().max(80).default(''),
-  teamId: idSchema.nullable().default(null),
   color: colorSchema,
   status: z.enum(MEMBER_STATUSES).default('active'),
   timezone: z.string().max(64).default('UTC'),
@@ -34,6 +33,12 @@ export const memberSummarySchema = memberSchema.pick({
 
 export type MemberSummary = z.infer<typeof memberSummarySchema>;
 
-export const updateMemberInputSchema = memberSchema.pick({ title: true, timezone: true, preferences: true }).partial();
+export const updateMemberInputSchema = z
+  .object({
+    title: z.string().max(80),
+    timezone: z.string().max(64),
+    preferences: updatePreferencesInputSchema,
+  })
+  .partial();
 
 export type UpdateMemberInput = z.infer<typeof updateMemberInputSchema>;

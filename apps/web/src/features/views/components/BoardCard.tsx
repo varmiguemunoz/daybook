@@ -1,16 +1,18 @@
 import type { Member, Task } from '@gr8r/domain';
-import { PRIORITY_LABELS } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Avatar } from '../../../shared/ui/Avatar';
 import { DueBadge, LabelChip, PriorityIcon, ProgressBar, StatusIcon } from '../../../shared/ui/vocab';
 import { subtaskProgress } from '../view-model';
+import { useTaskUi } from '../../tasks/task-ui-store';
+import { useUpdateTask } from '../../tasks/queries';
+import { AssigneeMenu, DueMenu, PriorityMenu } from '../../tasks/components/TaskMenus';
 
 interface CardProps {
   task: Task;
-  members: Map<string, Member>;
-  onOpen: (task: Task) => void;
+  members: Member[];
+  memberById: Map<string, Member>;
 }
 
 function CardLabels({ task }: { task: Task }) {
@@ -40,19 +42,19 @@ function CardSubtaskBar({ task }: { task: Task }) {
   );
 }
 
-function CardMeta({ task, members }: Omit<CardProps, 'onOpen'>) {
-  const assignee = task.assigneeId ? members.get(task.assigneeId) : undefined;
+function CardMeta({ task, members, memberById }: CardProps) {
+  const assignee = task.assigneeId ? memberById.get(task.assigneeId) : undefined;
 
   return (
     <div className="meta">
       <span className="key">{task.key}</span>
-      <button className="m" type="button" data-tip={PRIORITY_LABELS[task.priority]} aria-label={`Priority: ${PRIORITY_LABELS[task.priority]}`}>
+      <PriorityMenu task={task} className="m">
         <PriorityIcon priority={task.priority} size={13} />
-      </button>
+      </PriorityMenu>
       {task.dueDate && (
-        <button className="m" type="button" aria-label="Due date">
+        <DueMenu task={task} className="m">
           <DueBadge task={task} />
-        </button>
+        </DueMenu>
       )}
       {task.recurrence && (
         <span className="m" data-tip={`Repeats ${task.recurrence}`}>
@@ -65,14 +67,39 @@ function CardMeta({ task, members }: Omit<CardProps, 'onOpen'>) {
           {task.attachments.length}
         </span>
       )}
-      <button className="m" type="button" style={{ marginLeft: 'auto' }} aria-label="Assignee">
-        <Avatar member={assignee} className="sm" />
+      <span style={{ marginLeft: 'auto' }}>
+        <AssigneeMenu task={task} members={members} className="m">
+          <Avatar member={assignee} className="sm" tip={false} />
+        </AssigneeMenu>
+      </span>
+    </div>
+  );
+}
+
+function CardActions({ task }: { task: Task }) {
+  const update = useUpdateTask();
+  const openTask = useTaskUi(state => state.openTask);
+  const done = task.status === 'done';
+
+  return (
+    <div className="hacts" onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
+      <button
+        className="ibtn ibtn-xs"
+        type="button"
+        data-tip={done ? 'Reopen' : 'Mark complete'}
+        aria-label={done ? 'Reopen' : 'Mark complete'}
+        onClick={() => update.mutate({ id: task.id, patch: { status: done ? 'todo' : 'done' } })}
+      >
+        <Icon name={done ? 'rotate-ccw' : 'check'} size={13} />
+      </button>
+      <button className="ibtn ibtn-xs" type="button" data-tip="Edit" aria-label={`Edit ${task.key}`} onClick={() => openTask(task.id)}>
+        <Icon name="pencil" size={12} />
       </button>
     </div>
   );
 }
 
-export function BoardCardView({ task, members }: Omit<CardProps, 'onOpen'>) {
+export function BoardCardView({ task, members, memberById }: CardProps) {
   return (
     <div className={`kcard ${task.status === 'done' ? 'done' : ''}`.trim()} aria-label={task.title}>
       <CardLabels task={task} />
@@ -85,33 +112,19 @@ export function BoardCardView({ task, members }: Omit<CardProps, 'onOpen'>) {
         <div className="title">{task.title}</div>
       </div>
       <CardSubtaskBar task={task} />
-      <CardMeta task={task} members={members} />
-      <div className="hacts">
-        <button
-          className="ibtn ibtn-xs"
-          type="button"
-          data-tip={task.status === 'done' ? 'Reopen' : 'Mark complete'}
-          aria-label={task.status === 'done' ? 'Reopen' : 'Mark complete'}
-        >
-          <Icon name={task.status === 'done' ? 'rotate-ccw' : 'check'} size={13} />
-        </button>
-        <button className="ibtn ibtn-xs" type="button" data-tip="Quick edit" aria-label="Quick edit">
-          <Icon name="pencil" size={12} />
-        </button>
-        <button className="ibtn ibtn-xs" type="button" aria-label="More">
-          <Icon name="ellipsis" size={13} />
-        </button>
-      </div>
+      <CardMeta task={task} members={members} memberById={memberById} />
+      <CardActions task={task} />
     </div>
   );
 }
 
-export function BoardCard({ task, members, onOpen }: CardProps) {
+export function BoardCard({ task, members, memberById }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const openTask = useTaskUi(state => state.openTask);
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, cursor: 'grab' };
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onOpen(task)} {...attributes} {...listeners}>
-      <BoardCardView task={task} members={members} />
+    <div ref={setNodeRef} style={style} onClick={() => openTask(task.id)} {...attributes} {...listeners}>
+      <BoardCardView task={task} members={members} memberById={memberById} />
     </div>
   );
 }

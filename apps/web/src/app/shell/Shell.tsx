@@ -1,8 +1,11 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { useUiStore } from '../../stores/ui-store';
-import { CommandPalette } from '../../shared/ui/CommandPalette';
+import { CommandPalette } from '../../features/search/components/CommandPalette';
+import { TaskComposer } from '../../features/tasks/components/TaskComposer';
+import { TaskDrawer } from '../../features/tasks/components/TaskDrawer';
 import { useBootstrap } from '../../features/workspace/queries';
 import { useSSE } from '../../shared/hooks/useSSE';
+import { useApplyTheme } from '../../features/settings/theme';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { BottomNav } from './BottomNav';
@@ -10,6 +13,7 @@ import { BottomNav } from './BottomNav';
 export function Shell() {
   const { data } = useBootstrap();
   useSSE(data?.workspace.id);
+  useApplyTheme();
   const { pathname } = useLocation();
   const sidebarOpen = useUiStore(state => state.sidebarOpen);
   const toggleSidebar = useUiStore(state => state.toggleSidebar);
@@ -31,6 +35,8 @@ export function Shell() {
         <BottomNav />
       </div>
       <CommandPalette />
+      <TaskComposer />
+      <TaskDrawer />
     </>
   );
 }

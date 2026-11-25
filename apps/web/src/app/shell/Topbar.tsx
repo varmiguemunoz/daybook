@@ -63,11 +63,6 @@ export function Topbar({ me, unread }: { me?: Member; unread: boolean }) {
           />
         )}
       </Link>
-      <button className="btn btn-secondary btn-sm" type="button" aria-label="Create new">
-        <Icon name="plus" size={14} />
-        <span className="hide-m">New</span>
-        <Icon name="chevron-down" size={12} className="hide-m" />
-      </button>
       <button className="ibtn hide-m" type="button" aria-label="Account menu" style={{ width: 'auto', padding: '0 2px' }}>
         <Avatar member={me} className="md" tip={false} />
       </button>

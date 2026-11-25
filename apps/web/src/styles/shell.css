@@ -141,12 +141,6 @@ svg.logo {
   background: var(--surface-3);
   box-shadow: none;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .sitem.on {
-    background: var(--surface-3);
-    box-shadow: none;
-  }
-}
 .sitem .i {
   color: var(--text-4);
 }

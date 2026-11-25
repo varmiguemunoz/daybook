@@ -28,6 +28,10 @@ export class MemoryMemberRepository implements MemberRepository {
   async updateByClerkUserId(clerkUserId: string, patch: Partial<Member>): Promise<void> {
     this.items.filter({ clerkUserId }).forEach(member => this.items.patch(member.id, patch));
   }
+
+  async remove(workspaceId: string, id: string): Promise<boolean> {
+    return this.items.remove(id, { workspaceId });
+  }
 }
 
 export class MemoryWorkspaceRepository implements WorkspaceRepository {

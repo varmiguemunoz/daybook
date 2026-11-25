@@ -3,6 +3,7 @@ import type { OrganizationMembershipJSON, UserJSON, WebhookEvent } from '@clerk/
 import { verifyWebhook } from '@clerk/backend/webhooks';
 import type { Repositories } from '../../ports/repositories';
 import { roleOf, syncMember, syncWorkspace } from '../identity/identity-service';
+import { purgeMember } from '../members/member-service';
 
 function fullName(first: string | null, last: string | null, fallback: string): string {
   return [first, last].filter(Boolean).join(' ') || fallback;
@@ -15,11 +16,11 @@ async function syncMembership(repositories: Repositories, data: OrganizationMemb
   await syncMember(repositories, workspace.id, { clerkUserId: user.user_id, name, email: user.identifier, role: roleOf(data.role) });
 }
 
-async function disableMembership(repositories: Repositories, data: OrganizationMembershipJSON): Promise<void> {
+async function removeMembership(repositories: Repositories, data: OrganizationMembershipJSON): Promise<void> {
   const workspace = await repositories.workspaces.findByClerkOrgId(data.organization.id);
   if (!workspace) return;
   const member = await repositories.members.findByClerkUserId(workspace.id, data.public_user_data.user_id);
-  if (member) await repositories.members.update(workspace.id, member.id, { status: 'disabled' });
+  if (member) await purgeMember(repositories, workspace.id, member.id);
 }
 
 async function syncUser(repositories: Repositories, data: UserJSON): Promise<void> {
@@ -38,7 +39,7 @@ async function handle(repositories: Repositories, event: WebhookEvent): Promise<
     case 'organizationMembership.updated':
       return syncMembership(repositories, event.data);
     case 'organizationMembership.deleted':
-      return disableMembership(repositories, event.data);
+      return removeMembership(repositories, event.data);
     case 'user.updated':
       return syncUser(repositories, event.data);
     case 'user.deleted':

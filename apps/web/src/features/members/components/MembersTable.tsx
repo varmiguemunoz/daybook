@@ -1,45 +1,29 @@
-import type { Member, Task } from '@gr8r/domain';
+import { useState } from 'react';
+import type { Member, Task, Team } from '@gr8r/domain';
 import { ROLE_LABELS, ROLES } from '@gr8r/domain';
-import { Icon } from '../../../shared/ui/Icon';
 import { Avatar } from '../../../shared/ui/Avatar';
-import { timeAgo } from '../../../shared/dates';
+import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog';
+import { Icon } from '../../../shared/ui/Icon';
+import { showToast } from '../../../shared/ui/Toast';
 import { useCanManageOrganization, useChangeRole, useRemoveMember } from '../queries';
 
-const TEAM_NAMES: Record<string, string> = {
-  design: 'Design',
-  eng: 'Engineering',
-  mkt: 'Marketing',
-  product: 'Product',
-};
-
-function StatusBadge({ status }: { status: Member['status'] }) {
-  if (status === 'invited') {
-    return (
-      <span className="badge amber">
-        <span className="dot" />
-        Invited
-      </span>
-    );
-  }
-  if (status === 'disabled') return <span className="badge gray">Deactivated</span>;
-  return (
-    <span className="badge green">
-      <span className="dot" />
-      Active
-    </span>
-  );
+interface RowProps {
+  member: Member;
+  teams: Team[];
+  openTasks: number;
+  isMe: boolean;
+  canManage: boolean;
 }
 
-function RoleSelect({ member, isMe }: { member: Member; isMe: boolean }) {
+function RoleSelect({ member, disabled }: { member: Member; disabled: boolean }) {
   const changeRole = useChangeRole(member);
-  const canManage = useCanManageOrganization();
   return (
     <select
       className="select"
       value={member.role}
-      onChange={event => changeRole.mutate(event.target.value as Member['role'])}
-      aria-label="Role"
-      disabled={!canManage || isMe || changeRole.isPending}
+      onChange={event => changeRole.mutate(event.target.value as Member['role'], { onError: () => showToast('Could not change the role', 'error') })}
+      aria-label={`Role of ${member.name}`}
+      disabled={disabled || changeRole.isPending}
     >
       {ROLES.map(role => (
         <option key={role} value={role}>
@@ -50,104 +34,101 @@ function RoleSelect({ member, isMe }: { member: Member; isMe: boolean }) {
   );
 }
 
-function RemoveButton({ member, isMe }: { member: Member; isMe: boolean }) {
-  const remove = useRemoveMember(member);
-  const canManage = useCanManageOrganization();
+function RemoveMember({ member }: { member: Member }) {
+  const remove = useRemoveMember();
+  const [confirming, setConfirming] = useState(false);
+
+  function confirm() {
+    setConfirming(false);
+    remove.mutate(member.id, {
+      onSuccess: () => showToast(`${member.name} was removed`, 'success'),
+      onError: error => showToast(error.message.includes('admin') ? 'A workspace needs at least one admin' : 'Could not remove the member', 'error'),
+    });
+  }
+
   return (
-    <button
-      className="ibtn ibtn-sm"
-      type="button"
-      aria-label={`Remove ${member.name}`}
-      disabled={!canManage || isMe || remove.isPending}
-      onClick={() => {
-        if (window.confirm(`Remove ${member.name} from this organization?`)) remove.mutate();
-      }}
-    >
-      <Icon name="ellipsis" size={14} />
-    </button>
+    <>
+      <button
+        className="ibtn ibtn-sm"
+        type="button"
+        aria-label={`Remove ${member.name}`}
+        data-tip="Remove from workspace"
+        onClick={() => setConfirming(true)}
+        disabled={remove.isPending}
+      >
+        <Icon name="trash-2" size={14} />
+      </button>
+      <ConfirmDialog
+        open={confirming}
+        title="Remove member"
+        message={`${member.name} loses access to this workspace. Their tasks become unassigned and they leave every team.`}
+        confirmLabel="Remove"
+        onConfirm={confirm}
+        onClose={() => setConfirming(false)}
+      />
+    </>
   );
 }
 
-function MemberIdentity({ member, isMe }: { member: Member; isMe: boolean }) {
-  return (
-    <span className="row" style={{ gap: 10, textAlign: 'left' }}>
-      <Avatar member={member} className="md" tip={false} />
-      <span className="col">
-        <b style={{ fontWeight: 500 }}>
-          {member.name}
-          {isMe && (
-            <span className="faint" style={{ fontWeight: 400 }}>
-              {' '}
-              (you)
-            </span>
-          )}
-        </b>
-        <span className="faint" style={{ fontSize: 12 }}>
-          {member.email}
-        </span>
-      </span>
-    </span>
-  );
-}
-
-interface RowProps {
-  member: Member;
-  tasks: Task[];
-  meId: string;
-}
-
-function MemberRow({ member, tasks, meId }: RowProps) {
-  const openTasks = tasks.filter(task => task.assigneeId === member.id && task.status !== 'done').length;
+function MemberRow({ member, teams, openTasks, isMe, canManage }: RowProps) {
+  const memberTeams = teams.filter(team => team.memberIds.includes(member.id));
 
   return (
     <tr>
-      <td style={{ paddingLeft: 14 }}>
-        <MemberIdentity member={member} isMe={member.id === meId} />
-      </td>
-      <td style={{ textAlign: 'left' }}>
-        <RoleSelect member={member} isMe={member.id === meId} />
-      </td>
-      <td style={{ textAlign: 'left' }}>
-        <span className="row">{member.teamId ? (TEAM_NAMES[member.teamId] ?? member.teamId) : '—'}</span>
-      </td>
-      <td className="num">{openTasks}</td>
-      <td style={{ textAlign: 'left' }} className="muted">
-        {member.lastSeenAt ? timeAgo(member.lastSeenAt) : '—'}
-      </td>
-      <td style={{ textAlign: 'left' }}>
-        <StatusBadge status={member.status} />
+      <td>
+        <span className="row" style={{ gap: 10 }}>
+          <Avatar member={member} className="md" tip={false} />
+          <span className="col" style={{ minWidth: 0 }}>
+            <b className="trunc" style={{ fontWeight: 500 }}>
+              {member.name}
+              {isMe && (
+                <span className="faint" style={{ fontWeight: 400 }}>
+                  {' '}
+                  (you)
+                </span>
+              )}
+            </b>
+            <span className="faint trunc" style={{ fontSize: 12 }}>
+              {member.email}
+            </span>
+          </span>
+        </span>
       </td>
       <td>
-        <RemoveButton member={member} isMe={member.id === meId} />
+        <RoleSelect member={member} disabled={!canManage || isMe} />
       </td>
+      <td className="muted">{memberTeams.length ? memberTeams.map(team => team.name).join(', ') : '—'}</td>
+      <td className="num">{openTasks}</td>
+      <td style={{ textAlign: 'right' }}>{canManage && !isMe && <RemoveMember member={member} />}</td>
     </tr>
   );
 }
 
-interface Props {
-  members: Member[];
-  tasks: Task[];
-  meId: string;
-}
+export function MembersTable({ members, tasks, teams, meId }: { members: Member[]; tasks: Task[]; teams: Team[]; meId: string }) {
+  const canManage = useCanManageOrganization();
 
-export function MembersTable({ members, tasks, meId }: Props) {
   return (
     <div className="panel" style={{ overflowX: 'auto' }}>
-      <table className="perm-t" style={{ minWidth: 880 }}>
+      <table className="perm-t members-t">
         <thead>
           <tr>
-            <th style={{ paddingLeft: 14 }}>Member</th>
-            <th style={{ textAlign: 'left' }}>Role</th>
-            <th style={{ textAlign: 'left' }}>Team</th>
-            <th>Tasks</th>
-            <th style={{ textAlign: 'left' }}>Last active</th>
-            <th style={{ textAlign: 'left' }}>Status</th>
-            <th />
+            <th style={{ width: '38%' }}>Member</th>
+            <th style={{ width: 140 }}>Role</th>
+            <th>Teams</th>
+            <th style={{ width: 80 }}>Open tasks</th>
+            <th style={{ width: 56 }} />
           </tr>
         </thead>
         <tbody>
           {members.map(member => (
-            <MemberRow key={member.id} member={member} tasks={tasks} meId={meId} />
+            <MemberRow
+              key={member.id}
+              member={member}
+              teams={teams}
+              openTasks={tasks.filter(task => task.assigneeId === member.id && task.status !== 'done').length}
+              isMe={member.id === meId}
+              canManage={canManage}
+            />
           ))}
         </tbody>
       </table>

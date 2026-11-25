@@ -16,6 +16,8 @@ function testApp() {
   return createApp({
     repositories: createMemoryRepositories(),
     authenticate: signedInAs,
+    removeMembership: async () => undefined,
+    confirmMembership: async () => true,
     allowedOrigins: ['http://localhost:5175'],
     webhookSigningSecret: 'whsec_test',
   });

@@ -4,16 +4,28 @@ import { PRIORITY_LABELS, TASK_STATUS_LABELS } from '@gr8r/domain';
 import { Avatar } from '../../../shared/ui/Avatar';
 import { DueBadge, LabelChip, PriorityIcon, StatusIcon } from '../../../shared/ui/vocab';
 import { formatDate } from '../../../shared/dates';
+import { AssigneeMenu, DueMenu, PriorityMenu, StatusMenu } from '../../tasks/components/TaskMenus';
 
 export interface CellContext {
   task: Task;
   assignee?: Member;
+  members: Member[];
+  selected: boolean;
+  onSelect: () => void;
 }
 
 const CELLS: Record<string, (context: CellContext) => ReactNode> = {
-  title: ({ task }) => (
+  title: ({ task, selected, onSelect }) => (
     <td className="sticky cellbtn">
       <span className="row" style={{ gap: 8 }}>
+        <input
+          type="checkbox"
+          className="check"
+          aria-label={`Select ${task.title}`}
+          checked={selected}
+          onChange={onSelect}
+          onClick={event => event.stopPropagation()}
+        />
         <StatusIcon status={task.status} size={13} />
         <span className="trunc" style={{ fontWeight: 450 }}>
           {task.title}
@@ -26,29 +38,35 @@ const CELLS: Record<string, (context: CellContext) => ReactNode> = {
   ),
   status: ({ task }) => (
     <td className="cellbtn">
-      <span className="row" style={{ gap: 6 }}>
+      <StatusMenu task={task}>
         <StatusIcon status={task.status} />
         <span>{TASK_STATUS_LABELS[task.status]}</span>
-      </span>
+      </StatusMenu>
     </td>
   ),
   priority: ({ task }) => (
     <td className="cellbtn">
-      <span className="row" style={{ gap: 6 }}>
+      <PriorityMenu task={task}>
         <PriorityIcon priority={task.priority} />
         <span>{PRIORITY_LABELS[task.priority]}</span>
-      </span>
+      </PriorityMenu>
     </td>
   ),
-  assignee: ({ assignee }) => (
+  assignee: ({ task, assignee, members }) => (
     <td className="cellbtn">
-      <span className="row" style={{ gap: 6 }}>
+      <AssigneeMenu task={task} members={members}>
         <Avatar member={assignee} className="sm" tip={false} />
         <span className={`trunc ${assignee ? '' : 'faint'}`.trim()}>{assignee?.name ?? 'Unassigned'}</span>
-      </span>
+      </AssigneeMenu>
     </td>
   ),
-  due: ({ task }) => <td className="cellbtn num">{task.dueDate ? <DueBadge task={task} withIcon={false} /> : <span className="faint">—</span>}</td>,
+  due: ({ task }) => (
+    <td className="cellbtn num">
+      <DueMenu task={task} className="pillbtn">
+        {task.dueDate ? <DueBadge task={task} withIcon={false} /> : <span className="faint">—</span>}
+      </DueMenu>
+    </td>
+  ),
   labels: ({ task }) => (
     <td className="cellbtn">
       <span className="row" style={{ gap: 4 }}>

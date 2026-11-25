@@ -12,9 +12,9 @@ export function TeamsGrid({ teams, members, onOpen }: Props) {
   return (
     <div className="pgrid">
       {teams.map(team => {
-        const roster = members.filter(member => team.memberIds.includes(member.id) || member.teamId === team.id);
+        const roster = members.filter(member => team.memberIds.includes(member.id));
         return (
-          <div key={team.id} className="pcard" role="link" tabIndex={0} onClick={() => onOpen(team.id)} style={{ cursor: 'pointer' }}>
+          <button key={team.id} type="button" className="pcard" onClick={() => onOpen(team.id)} style={{ cursor: 'pointer', textAlign: 'left' }}>
             <div className="row">
               <span className="picon" style={{ ['--c' as string]: team.color }}>
                 <Icon name={team.icon} size={15} />
@@ -25,12 +25,12 @@ export function TeamsGrid({ teams, members, onOpen }: Props) {
             <div className="foot">
               <span className="row" style={{ gap: 4 }}>
                 <Icon name="users" size={12} />
-                {roster.length} members
+                {roster.length} {roster.length === 1 ? 'member' : 'members'}
               </span>
               <span className="sp" />
               <AvatarStack members={roster} max={4} />
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

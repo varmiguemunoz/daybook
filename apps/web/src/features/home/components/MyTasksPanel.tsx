@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Task } from '@gr8r/domain';
 import { PRIORITY_LABELS, TASK_STATUS_LABELS } from '@gr8r/domain';
 import { Icon } from '../../../shared/ui/Icon';
@@ -6,6 +7,8 @@ import { EmptyState } from '../../../shared/ui/EmptyState';
 import { PriorityIcon, StatusIcon } from '../../../shared/ui/vocab';
 import { diffDays, parseDate, relativeDate, TODAY } from '../../../shared/dates';
 import type { HomeData } from '../home-data';
+import { useUpdateTask } from '../../tasks/queries';
+import { useTaskUi } from '../../tasks/task-ui-store';
 
 type Tab = 'upcoming' | 'overdue' | 'completed';
 
@@ -40,9 +43,26 @@ function bucket(mine: Task[], tab: Tab): Task[] {
 }
 
 function MiniRow({ task }: { task: Task }) {
+  const update = useUpdateTask();
+  const openTask = useTaskUi(state => state.openTask);
+  const done = task.status === 'done';
+
   return (
-    <div className={`mini ${task.status === 'done' ? 'done' : ''}`.trim()} role="button" tabIndex={0}>
-      <input type="checkbox" className="check round" defaultChecked={task.status === 'done'} aria-label={task.title} />
+    <div
+      className={`mini ${done ? 'done' : ''}`.trim()}
+      role="button"
+      tabIndex={0}
+      onClick={() => openTask(task.id)}
+      onKeyDown={event => event.key === 'Enter' && event.target === event.currentTarget && openTask(task.id)}
+    >
+      <input
+        type="checkbox"
+        className="check round"
+        checked={done}
+        onClick={event => event.stopPropagation()}
+        onChange={() => update.mutate({ id: task.id, patch: { status: done ? 'todo' : 'done' } })}
+        aria-label={`${done ? 'Reopen' : 'Complete'} ${task.title}`}
+      />
       <span data-tip={TASK_STATUS_LABELS[task.status]}>
         <StatusIcon status={task.status} />
       </span>
@@ -58,6 +78,7 @@ function MiniRow({ task }: { task: Task }) {
 }
 
 function PanelHead({ tab, counts, onTab }: { tab: Tab; counts: Record<Tab, number>; onTab: (tab: Tab) => void }) {
+  const navigate = useNavigate();
   return (
     <div className="panel-h">
       <h2 id="h-mytasks">My tasks</h2>
@@ -69,7 +90,7 @@ function PanelHead({ tab, counts, onTab }: { tab: Tab; counts: Record<Tab, numbe
             </button>
           ))}
         </div>
-        <button className="ibtn ibtn-sm" type="button" data-tip="Open My Tasks" aria-label="Open My Tasks">
+        <button className="ibtn ibtn-sm" type="button" data-tip="Open Tasks" aria-label="Open Tasks" onClick={() => navigate('/tasks')}>
           <Icon name="arrow-up-right" size={15} />
         </button>
       </div>
@@ -78,6 +99,7 @@ function PanelHead({ tab, counts, onTab }: { tab: Tab; counts: Record<Tab, numbe
 }
 
 export function MyTasksPanel({ data }: { data: HomeData }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('upcoming');
   const mine = data.tasks.filter(task => task.assigneeId === data.me.id);
   const lists = {
@@ -101,7 +123,12 @@ export function MyTasksPanel({ data }: { data: HomeData }) {
         />
       )}
       {lists[tab].length > 7 && (
-        <button className="addrow" type="button" style={{ paddingLeft: 14, borderTop: '1px solid var(--divider)', borderBottom: 0 }}>
+        <button
+          className="addrow"
+          type="button"
+          onClick={() => navigate('/tasks')}
+          style={{ paddingLeft: 14, borderTop: '1px solid var(--divider)', borderBottom: 0 }}
+        >
           View all {lists[tab].length} tasks <Icon name="arrow-right" size={13} />
         </button>
       )}

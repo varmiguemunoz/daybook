@@ -15,6 +15,7 @@ export interface MemberRepository {
   upsert(member: Member, patch: Partial<Member>): Promise<Member>;
   update(workspaceId: string, id: string, patch: Partial<Member>): Promise<Member | null>;
   updateByClerkUserId(clerkUserId: string, patch: Partial<Member>): Promise<void>;
+  remove(workspaceId: string, id: string): Promise<boolean>;
 }
 
 export interface WorkspaceRepository {

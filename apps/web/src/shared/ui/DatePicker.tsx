@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 import { Popover } from './Popover';
@@ -8,6 +8,8 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  className?: string;
+  children?: ReactNode;
 }
 
 function toIso(date: Date | undefined): string {
@@ -25,25 +27,43 @@ function fromIso(value: string): Date | undefined {
   return new Date(year, month - 1, day);
 }
 
-export function DatePicker({ value, onChange, label = 'Due date' }: Props) {
+export function DatePicker({ value, onChange, label = 'Due date', className = 'btn btn-secondary btn-sm', children }: Props) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
     <>
-      <button ref={setAnchor} type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen(current => !current)} aria-label={label}>
-        <Icon name="calendar" size={13} />
-        {value || 'Set date'}
+      <button
+        ref={setAnchor}
+        type="button"
+        className={className}
+        onClick={event => {
+          event.stopPropagation();
+          setOpen(current => !current);
+        }}
+        onPointerDown={event => event.stopPropagation()}
+        aria-label={label}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+      >
+        {children ?? (
+          <>
+            <Icon name="calendar" size={13} />
+            {value || 'Set date'}
+          </>
+        )}
       </button>
       <Popover open={open} anchor={anchor} onClose={() => setOpen(false)}>
-        <DayPicker
-          mode="single"
-          selected={fromIso(value)}
-          onSelect={date => {
-            onChange(toIso(date));
-            setOpen(false);
-          }}
-        />
+        <div onClick={event => event.stopPropagation()} onPointerDown={event => event.stopPropagation()}>
+          <DayPicker
+            mode="single"
+            selected={fromIso(value)}
+            onSelect={date => {
+              onChange(toIso(date));
+              setOpen(false);
+            }}
+          />
+        </div>
       </Popover>
     </>
   );

@@ -53,26 +53,43 @@ export type Subtask = z.infer<typeof subtaskSchema>;
 export type Attachment = z.infer<typeof attachmentSchema>;
 export type Recurrence = (typeof RECURRENCES)[number];
 
+const editableTaskFields = {
+  title: nonEmptyText,
+  status: z.enum(TASK_STATUSES),
+  assigneeId: idSchema.nullable(),
+  priority: z.enum(PRIORITIES),
+  startDate: isoDateSchema.nullable(),
+  dueDate: isoDateSchema.nullable(),
+  labels: z.array(z.enum(LABEL_IDS)),
+  description: htmlSchema,
+  estimate: estimateSchema.nullable(),
+  recurrence: z.enum(RECURRENCES).nullable(),
+};
+
 export const createTaskInputSchema = z.object({
   projectId: idSchema.nullable().default(null),
-  title: nonEmptyText,
-  status: z.enum(TASK_STATUSES).default('todo'),
-  assigneeId: idSchema.nullable().default(null),
-  priority: z.enum(PRIORITIES).default('none'),
-  startDate: isoDateSchema.nullable().default(null),
-  dueDate: isoDateSchema.nullable().default(null),
-  labels: z.array(z.enum(LABEL_IDS)).default([]),
-  description: htmlSchema.default(''),
-  estimate: estimateSchema.nullable().default(null),
-  recurrence: z.enum(RECURRENCES).nullable().default(null),
+  title: editableTaskFields.title,
+  status: editableTaskFields.status.default('todo'),
+  assigneeId: editableTaskFields.assigneeId.default(null),
+  priority: editableTaskFields.priority.default('none'),
+  startDate: editableTaskFields.startDate.default(null),
+  dueDate: editableTaskFields.dueDate.default(null),
+  labels: editableTaskFields.labels.default([]),
+  description: editableTaskFields.description.default(''),
+  estimate: editableTaskFields.estimate.default(null),
+  recurrence: editableTaskFields.recurrence.default(null),
 });
 
-export const updateTaskInputSchema = createTaskInputSchema
-  .omit({ projectId: true, title: true })
-  .extend({ title: nonEmptyText.optional(), order: z.number().int().nonnegative().optional() })
-  .partial();
+export const updateTaskInputSchema = z.object({ ...editableTaskFields, order: z.number().int().nonnegative() }).partial();
+
+export const bulkTaskPatchSchema = updateTaskInputSchema
+  .pick({ status: true, priority: true, assigneeId: true })
+  .refine(patch => Object.keys(patch).length > 0, 'Choose at least one field to change');
+
+export const bulkTaskIdsSchema = z.array(idSchema).min(1).max(200);
 
 export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
 /** Same schema before defaults are applied: what an API client actually has to send. */
 export type CreateTaskPayload = z.input<typeof createTaskInputSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
+export type BulkTaskPatch = z.infer<typeof bulkTaskPatchSchema>;

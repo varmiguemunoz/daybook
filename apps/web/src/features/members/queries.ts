@@ -46,11 +46,11 @@ export function useChangeRole(member: Member) {
   });
 }
 
-export function useRemoveMember(member: Member) {
+export function useRemoveMember() {
   const client = useQueryClient();
-  const organization = useActiveOrganization();
   return useMutation({
-    mutationFn: () => organization().removeMember(member.clerkUserId),
-    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.members }),
+    mutationFn: (id: string) => apiFetch<void>(`/api/members/${id}`, { method: 'DELETE' }),
+    onSuccess: () =>
+      Promise.all([queryKeys.members, queryKeys.tasks, queryKeys.teams, queryKeys.bootstrap].map(queryKey => client.invalidateQueries({ queryKey }))),
   });
 }

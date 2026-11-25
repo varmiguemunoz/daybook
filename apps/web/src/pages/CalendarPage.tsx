@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Icon } from '../shared/ui/Icon';
 import { Skeleton } from '../shared/ui/Skeleton';
 import { PageHeader } from '../shared/ui/PageHeader';
-import { Modal } from '../shared/ui/Modal';
-import { MONL, TODAY, addDays, formatDate, isoDate, monthRange, startOfWeek } from '../shared/dates';
-import type { Member, Task } from '@gr8r/domain';
-import { useViewData } from '../features/views/use-view-data';
+import { SearchField } from '../shared/ui/SearchField';
+import { MONL, TODAY, addDays, formatDate, isoDate, startOfWeek } from '../shared/dates';
 import { CalendarToolbar, type CalendarMode } from '../features/views/components/CalendarToolbar';
-import { CalendarMonth } from '../features/views/components/CalendarMonth';
-import { CalendarWeek } from '../features/views/components/CalendarWeek';
-import { TaskForm } from '../features/tasks/components/TaskForm';
+import { CalendarGrid } from '../features/views/components/CalendarGrid';
+import { useTaskView } from '../features/tasks/use-task-view';
+import { NewTaskButton } from '../features/tasks/components/NewTaskButton';
+import { TaskFilters } from '../features/tasks/components/TaskFilters';
 
 const WEEK_LENGTH = 7;
 
@@ -22,57 +20,33 @@ function rangeLabel(start: Date): string {
   return `${formatDate(isoDate(start))} – ${formatDate(isoDate(end))}, ${end.getFullYear()}`;
 }
 
-function CalendarBody({ mode, cursor, tasks, memberById }: { mode: CalendarMode; cursor: Date; tasks: Task[]; memberById: Map<string, Member> }) {
-  const days = mode === 'month' ? monthRange(cursor) : Array.from({ length: WEEK_LENGTH }, (_, index) => addDays(startOfWeek(cursor), index));
-
-  return (
-    <div className="cal" style={{ minHeight: 640 }}>
-      {mode === 'month' ? (
-        <CalendarMonth days={days} month={cursor} tasks={tasks} members={memberById} />
-      ) : (
-        <CalendarWeek days={days} tasks={tasks} members={memberById} />
-      )}
-    </div>
-  );
-}
-
 export function CalendarPage() {
-  const { tasks, memberById, isLoading, error } = useViewData();
+  const view = useTaskView('calendar');
   const [mode, setMode] = useState<CalendarMode>('month');
   const [cursor, setCursor] = useState(TODAY);
-  const [composerOpen, setComposerOpen] = useState(false);
-  const projectId = undefined;
 
   const shift = (delta: number) =>
     setCursor(current => (mode === 'month' ? new Date(current.getFullYear(), current.getMonth() + delta, 1) : addDays(current, delta * WEEK_LENGTH)));
 
   return (
     <div className="page flush">
-      <PageHeader
-        title="Calendar"
-        subtitle="Deadlines and events across every project."
-        action={
-          <button className="btn btn-primary" type="button" onClick={() => setComposerOpen(true)}>
-            <Icon name="plus" size={14} />
-            New task
-          </button>
-        }
-      />
+      <PageHeader title="Calendar" subtitle="Deadlines across your workspace. Drag a task to another day to reschedule it." action={<NewTaskButton />} />
       <CalendarToolbar
         mode={mode}
         label={mode === 'month' ? monthLabel(cursor) : rangeLabel(startOfWeek(cursor))}
         onMode={setMode}
         onShift={shift}
         onToday={() => setCursor(TODAY)}
+        tools={
+          <>
+            <SearchField value={view.query} onChange={view.setQuery} />
+            <TaskFilters filter={view.filter} members={view.members} onChange={view.setFilter} />
+          </>
+        }
       />
-      {isLoading && <Skeleton lines={8} />}
-      {error && <p className="error">{(error as Error).message}</p>}
-      {!isLoading && !error && <CalendarBody mode={mode} cursor={cursor} tasks={tasks} memberById={memberById} />}
-      {projectId && (
-        <Modal open={composerOpen} onClose={() => setComposerOpen(false)} title="New task">
-          <TaskForm projectId={projectId} />
-        </Modal>
-      )}
+      {view.isLoading && <Skeleton lines={8} />}
+      {view.error && <p className="error">{view.error.message}</p>}
+      {!view.isLoading && !view.error && <CalendarGrid mode={mode} cursor={cursor} tasks={view.tasks} memberById={view.memberById} />}
     </div>
   );
 }

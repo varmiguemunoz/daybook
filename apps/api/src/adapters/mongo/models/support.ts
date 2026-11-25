@@ -13,7 +13,6 @@ const memberSchema = new Schema(
     email: { type: String, index: true },
     role: String,
     title: String,
-    teamId: { type: String, default: null },
     color: String,
     status: String,
     timezone: String,

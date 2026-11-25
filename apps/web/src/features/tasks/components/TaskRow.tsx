@@ -1,94 +1,82 @@
 import type { Member, Task } from '@gr8r/domain';
-import { Icon } from '../../../shared/ui/Icon';
 import { Avatar } from '../../../shared/ui/Avatar';
+import { Icon } from '../../../shared/ui/Icon';
 import { PriorityPill, StatusPill } from '../../../shared/ui/vocab';
 import { isOverdue, relativeDate } from '../../../shared/dates';
+import { useTaskUi } from '../task-ui-store';
+import { AssigneeMenu, DueMenu, PriorityMenu, StatusMenu } from './TaskMenus';
 
 interface TaskRowProps {
   task: Task;
   assignee?: Member;
-  columns: string[];
+  members: Member[];
   template: string;
-  onOpen: (task: Task) => void;
-  onDelete: (task: Task) => void;
+  selected: boolean;
+  onSelect: () => void;
 }
 
-function StatusCell({ task }: { task: Task }) {
+function dueClass(task: Task): string {
+  if (!task.dueDate) return 'pillbtn empty';
+  return isOverdue(task.dueDate, task.status) ? 'pillbtn over' : 'pillbtn';
+}
+
+function TaskRowCells({ task, assignee, members }: Pick<TaskRowProps, 'task' | 'assignee' | 'members'>) {
   return (
-    <div className="c-meta c-status">
-      <button className="pillbtn" type="button" aria-label={`Status: ${task.status}`}>
-        <StatusPill status={task.status} />
-      </button>
-    </div>
+    <>
+      <div className="c-meta c-status">
+        <StatusMenu task={task}>
+          <StatusPill status={task.status} />
+        </StatusMenu>
+      </div>
+      <div className="c-meta c-assignee">
+        <AssigneeMenu task={task} members={members} className={`pillbtn ${assignee ? '' : 'empty'}`.trim()}>
+          <Avatar member={assignee} className="sm" tip={false} />
+          <span className="trunc">{assignee ? assignee.name : 'Unassigned'}</span>
+        </AssigneeMenu>
+      </div>
+      <div className="c-meta c-priority">
+        <PriorityMenu task={task} className={`pillbtn ${task.priority === 'none' ? 'empty' : ''}`.trim()}>
+          <PriorityPill priority={task.priority} />
+        </PriorityMenu>
+      </div>
+      <div className="c-meta c-due">
+        <DueMenu task={task} className={dueClass(task)}>
+          <Icon name="calendar" size={13} />
+          <span className={task.dueDate ? 'num' : ''}>{task.dueDate ? relativeDate(task.dueDate) : 'Set date'}</span>
+        </DueMenu>
+      </div>
+    </>
   );
 }
 
-function AssigneeCell({ assignee }: Pick<TaskRowProps, 'assignee'>) {
-  return (
-    <div className="c-meta c-assignee">
-      <button className={`pillbtn ${assignee ? '' : 'empty'}`.trim()} type="button" aria-label="Assignee">
-        <Avatar member={assignee} className="sm" tip={false} />
-        <span className="trunc">{assignee ? assignee.name : 'Unassigned'}</span>
-      </button>
-    </div>
-  );
-}
+export function TaskRow({ task, assignee, members, template, selected, onSelect }: TaskRowProps) {
+  const openTask = useTaskUi(state => state.openTask);
 
-function PriorityCell({ task }: { task: Task }) {
-  return (
-    <div className="c-meta c-priority">
-      <button className={`pillbtn ${task.priority === 'none' ? 'empty' : ''}`.trim()} type="button" aria-label="Priority">
-        <PriorityPill priority={task.priority} />
-      </button>
-    </div>
-  );
-}
-
-function DueCell({ task }: { task: Task }) {
-  const over = isOverdue(task.dueDate, task.status);
-
-  return (
-    <div className="c-meta c-due">
-      <button className={`pillbtn ${task.dueDate ? (over ? 'over' : '') : 'empty'}`.trim()} type="button" aria-label="Due date">
-        <Icon name="calendar" size={13} />
-        <span className={task.dueDate ? 'num' : ''}>{task.dueDate ? relativeDate(task.dueDate) : 'Set date'}</span>
-      </button>
-    </div>
-  );
-}
-
-export function TaskRow({ task, assignee, columns, template, onOpen, onDelete }: TaskRowProps) {
   return (
     <div
-      className={`trow ${task.status === 'done' ? 'done' : ''}`.trim()}
+      className={`trow ${task.status === 'done' ? 'done' : ''} ${selected ? 'sel' : ''}`.trim()}
       style={{ ['--cols' as string]: template }}
-      data-task-row={task.id}
-      onClick={() => onOpen(task)}
-      role="button"
+      onClick={() => openTask(task.id)}
+      onKeyDown={event => event.key === 'Enter' && event.target === event.currentTarget && openTask(task.id)}
+      role="row"
       tabIndex={0}
     >
-      <div className="handle" draggable aria-hidden="true">
-        <Icon name="grip-vertical" size={14} />
-      </div>
-      <div className="c-check">
-        <input type="checkbox" className="check" aria-label={`Select ${task.title}`} />
+      <div className="c-check" onClick={event => event.stopPropagation()}>
+        <input type="checkbox" className="check" aria-label={`Select ${task.title}`} checked={selected} onChange={onSelect} />
       </div>
       <div className="ttl">
         <span className="key">{task.key}</span>
         <span className="tt">{task.title}</span>
       </div>
-      {columns.includes('status') && <StatusCell task={task} />}
-      {columns.includes('assignee') && <AssigneeCell assignee={assignee} />}
-      {columns.includes('priority') && <PriorityCell task={task} />}
-      {columns.includes('due') && <DueCell task={task} />}
+      <TaskRowCells task={task} assignee={assignee} members={members} />
       <div className="c-more">
         <button
           className="ibtn ibtn-sm"
           type="button"
-          aria-label="More actions"
+          aria-label={`Open ${task.key}`}
           onClick={event => {
             event.stopPropagation();
-            if (window.confirm(`Delete ${task.key}?`)) onDelete(task);
+            openTask(task.id);
           }}
         >
           <Icon name="ellipsis" size={15} />

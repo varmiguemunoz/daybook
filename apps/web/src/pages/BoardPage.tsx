@@ -1,45 +1,27 @@
-import { useState } from 'react';
-import type { Member } from '@gr8r/domain';
 import { Skeleton } from '../shared/ui/Skeleton';
 import { PageHeader } from '../shared/ui/PageHeader';
-import { useViewData } from '../features/views/use-view-data';
-import { searchTasks } from '../features/views/view-model';
 import { ViewModeSwitch } from '../features/views/components/ViewModeSwitch';
 import { ViewToolbar } from '../features/views/components/ViewToolbar';
 import { Board } from '../features/views/components/Board';
-import { TaskDrawer } from '../features/tasks/components/TaskDrawer';
-import type { Task } from '@gr8r/domain';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys, apiFetch } from '../shared/api/client';
+import { useTaskView } from '../features/tasks/use-task-view';
+import { NewTaskButton } from '../features/tasks/components/NewTaskButton';
+import { TaskFilters } from '../features/tasks/components/TaskFilters';
 
 export function BoardPage() {
-  const { tasks, memberById, isLoading, error } = useViewData();
-  const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<Task | null>(null);
-  const visible = searchTasks(tasks, query);
-  const memberMap: Map<string, Member> = memberById;
-  const client = useQueryClient();
+  const view = useTaskView('board');
 
   return (
     <div className="page flush">
-      <PageHeader title="Board" subtitle="Drag work across statuses to keep the flow moving." />
-      <ViewToolbar query={query} onQuery={setQuery} right={<ViewModeSwitch active="/board" />} />
-      {isLoading && <Skeleton lines={8} />}
-      {error && <p className="error">{(error as Error).message}</p>}
-      {!isLoading && !error && (
-        <Board
-          tasks={visible}
-          members={memberMap}
-          onAdd={() => undefined}
-          onOpen={setSelected}
-          onMove={(taskId, status) => {
-            apiFetch(`/api/tasks/${taskId}`, { method: 'PATCH', body: JSON.stringify({ status }) })
-              .then(() => client.invalidateQueries({ queryKey: queryKeys.tasks() }))
-              .catch(() => undefined);
-          }}
-        />
-      )}
-      <TaskDrawer task={selected} onClose={() => setSelected(null)} />
+      <PageHeader title="Board" subtitle="Drag work across statuses to keep the flow moving." action={<NewTaskButton />} />
+      <ViewToolbar
+        query={view.query}
+        onQuery={view.setQuery}
+        filter={<TaskFilters filter={view.filter} members={view.members} onChange={view.setFilter} />}
+        right={<ViewModeSwitch active="/board" />}
+      />
+      {view.isLoading && <Skeleton lines={8} />}
+      {view.error && <p className="error">{view.error.message}</p>}
+      {!view.isLoading && !view.error && <Board tasks={view.tasks} members={view.members} memberById={view.memberById} />}
     </div>
   );
 }
