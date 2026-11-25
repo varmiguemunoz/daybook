@@ -1,0 +1,43 @@
+{
+  "name": "gr8r-studio",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Internal project management workspace: React + Vite client, Hono API, MongoDB.",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @gr8r/legacy",
+    "dev:web": "npm run dev --workspace @gr8r/web",
+    "dev:api": "npm run dev --workspace @gr8r/api",
+    "build": "npm run build --workspaces --if-present",
+    "preview": "npm run preview --workspace @gr8r/legacy",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:visual": "playwright test",
+    "visual:baseline": "playwright test --update-snapshots",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f mongo"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.39.5",
+    "globals": "^15.15.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.2.0"
+  }
+}

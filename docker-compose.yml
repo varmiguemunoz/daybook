@@ -1,0 +1,22 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: gr8r-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-gr8r}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-gr8rpass}
+      MONGO_INITDB_DATABASE: gr8r
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mongo_data:

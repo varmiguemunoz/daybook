@@ -1,0 +1,24 @@
+import { z } from 'zod';
+
+export const THEMES = ['light', 'dark', 'system'] as const;
+export const DENSITIES = ['comfortable', 'compact'] as const;
+export const ACCENTS = ['indigo', 'blue', 'violet', 'teal', 'rose', 'graphite'] as const;
+export const MOTION_PREFERENCES = ['system', 'reduce'] as const;
+
+export const preferencesSchema = z.object({
+  theme: z.enum(THEMES).default('system'),
+  accent: z.enum(ACCENTS).default('indigo'),
+  density: z.enum(DENSITIES).default('comfortable'),
+  weekStart: z.number().int().min(0).max(6).default(1),
+  dateFormat: z.string().max(16).default('MMM d'),
+  language: z.string().max(32).default('en'),
+  timezone: z.string().max(64).default('UTC'),
+  motion: z.enum(MOTION_PREFERENCES).default('system'),
+  homeRoute: z.string().max(32).default('home'),
+});
+
+export type Preferences = z.infer<typeof preferencesSchema>;
+
+export const updatePreferencesInputSchema = preferencesSchema.partial();
+
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesInputSchema>;

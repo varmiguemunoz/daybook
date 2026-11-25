@@ -1,0 +1,28 @@
+import type { Repositories } from '../../ports/repositories';
+import { connectDatabase, disconnectDatabase } from './connection';
+import { MongoActivityRepository, MongoInvitationRepository, MongoMemberRepository, MongoWorkspaceRepository } from './support-repositories';
+import { MongoCalendarEventRepository, MongoCommentRepository, MongoFileRepository, MongoNotificationRepository, MongoSavedViewRepository, MongoTeamRepository } from './extra-repositories';
+import { MongoTaskRepository } from './task-repository';
+
+export interface MongoRepositories extends Repositories {
+  close: () => Promise<void>;
+}
+
+export async function createMongoRepositories(uri: string): Promise<MongoRepositories> {
+  await connectDatabase(uri);
+
+  return {
+    workspaces: new MongoWorkspaceRepository(),
+    members: new MongoMemberRepository(),
+    tasks: new MongoTaskRepository(),
+    activity: new MongoActivityRepository(),
+    invitations: new MongoInvitationRepository(),
+    teams: new MongoTeamRepository(),
+    comments: new MongoCommentRepository(),
+    files: new MongoFileRepository(),
+    events: new MongoCalendarEventRepository(),
+    views: new MongoSavedViewRepository(),
+    notifications: new MongoNotificationRepository(),
+    close: disconnectDatabase,
+  };
+}
