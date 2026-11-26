@@ -56,4 +56,7 @@ export const queryKeys = {
   notifications: (unreadOnly?: boolean) => ['notifications', unreadOnly ?? false] as const,
   activity: (limit?: number) => ['activity', limit ?? 20] as const,
   search: (q: string) => ['search', q] as const,
+  folders: ['folders'] as const,
+  notes: ['notes'] as const,
+  note: (id: string) => ['note', id] as const,
 };

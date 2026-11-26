@@ -1,9 +1,10 @@
-import type { Activity, Comment, Member, Notification, Task, Team, Workspace } from '@daybook/domain';
+import type { Activity, Comment, Folder, Member, Note, Notification, Task, Team, Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { Collection } from './collection';
 import { MemoryTaskRepository } from './task-repository';
 import { MemoryActivityRepository, MemoryMemberRepository, MemoryWorkspaceRepository } from './support-repositories';
 import { MemoryCommentRepository, MemoryNotificationRepository, MemoryTeamRepository } from './extra-repositories';
+import { MemoryFolderRepository, MemoryNoteRepository } from './notes-repositories';
 import { defaultWorkspace, members, tasks } from '../../fixtures/seed';
 
 export interface SeedData {
@@ -21,6 +22,8 @@ export function createMemoryRepositories(seed: SeedData = {}): Repositories {
     teams: new Collection<Team>([]),
     comments: new Collection<Comment>([]),
     notifications: new Collection<Notification>([]),
+    folders: new Collection<Folder>([]),
+    notes: new Collection<Note>([]),
   };
 
   return {
@@ -31,5 +34,7 @@ export function createMemoryRepositories(seed: SeedData = {}): Repositories {
     teams: new MemoryTeamRepository(collections.teams),
     comments: new MemoryCommentRepository(collections.comments),
     notifications: new MemoryNotificationRepository(collections.notifications),
+    folders: new MemoryFolderRepository(collections.folders),
+    notes: new MemoryNoteRepository(collections.notes),
   };
 }

@@ -78,7 +78,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            placeholder="Search tasks, people, teams and pages…"
+            placeholder="Search tasks, notes, people, teams and pages…"
             role="combobox"
             aria-expanded="true"
             aria-controls="palette-list"

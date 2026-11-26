@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T04:19:19.067325+00:00",
+  "title": "Design System: Daybook",
+  "extensions": {
+    "colorMeta": {
+      "ink-indigo": {
+        "role": "primary",
+        "displayName": "Ink Indigo",
+        "tonalRamp": ["#1c2259", "#27307f", "#3542a6", "#4b5bd6", "#6f7de0", "#97a1ea", "#c0c6f3", "#e6e8fb"]
+      },
+      "ink-indigo-night": {
+        "role": "primary",
+        "displayName": "Ink Indigo Night",
+        "purpose": "Accent in dark mode."
+      },
+      "warm-paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "dark": "#1a1a19"
+      },
+      "sidebar-linen": {
+        "role": "neutral",
+        "displayName": "Sidebar Linen",
+        "dark": "#151514"
+      },
+      "clean-sheet": {
+        "role": "neutral",
+        "displayName": "Clean Sheet",
+        "dark": "#1d1d1c"
+      },
+      "pressed-paper": {
+        "role": "neutral",
+        "displayName": "Pressed Paper",
+        "dark": "#252524"
+      },
+      "folded-paper": {
+        "role": "neutral",
+        "displayName": "Folded Paper",
+        "dark": "#2d2d2b"
+      },
+      "sunken-paper": {
+        "role": "neutral",
+        "displayName": "Sunken Paper",
+        "dark": "#181817"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "dark": "#2c2b29"
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Hairline Strong",
+        "dark": "#3a3936"
+      },
+      "graphite-ink": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "dark": "#eceae5"
+      },
+      "pencil": {
+        "role": "neutral",
+        "displayName": "Pencil",
+        "dark": "#b5b2ab"
+      },
+      "faded-pencil": {
+        "role": "neutral",
+        "displayName": "Faded Pencil",
+        "dark": "#9a968f"
+      },
+      "ghost-pencil": {
+        "role": "neutral",
+        "displayName": "Ghost Pencil",
+        "dark": "#6f6c66",
+        "purpose": "Icons only."
+      },
+      "ledger-green": {
+        "role": "semantic",
+        "displayName": "Ledger Green",
+        "dark": "#5cba86"
+      },
+      "ochre": {
+        "role": "semantic",
+        "displayName": "Ochre",
+        "dark": "#d8a443"
+      },
+      "stamp-red": {
+        "role": "semantic",
+        "displayName": "Stamp Red",
+        "dark": "#e57d70"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page and note titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section pages such as Settings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Rows, fields and interface text."
+      },
+      "reading": {
+        "displayName": "Reading",
+        "purpose": "Rendered notes, 36rem measure (about 68 characters)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, chips, hints and metadata."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Markdown source, code and keys."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hairline-lift",
+        "value": "0 1px 2px rgba(28,25,20,0.05)",
+        "purpose": "Bordered buttons and the active navigation row."
+      },
+      {
+        "name": "card-ring",
+        "value": "0 1px 2px rgba(28,25,20,0.04), 0 0 0 1px var(--border)",
+        "purpose": "Resting board cards."
+      },
+      {
+        "name": "pop",
+        "value": "0 12px 32px -8px rgba(28,25,20,0.16), 0 2px 6px -2px rgba(28,25,20,0.06), 0 0 0 1px var(--border)",
+        "purpose": "Menus, popovers and dialogs."
+      },
+      {
+        "name": "drag",
+        "value": "0 16px 36px -10px rgba(28,25,20,0.28), 0 0 0 1px var(--border-strong)",
+        "purpose": "An item being dragged."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Default ease-out for state changes and entrances."
+      },
+      {
+        "name": "ease-drawer",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Drawers sliding in."
+      },
+      {
+        "name": "duration",
+        "value": "140ms",
+        "purpose": "Hover and colour transitions."
+      },
+      {
+        "name": "duration-enter",
+        "value": "160ms",
+        "purpose": "Popovers, tree chevrons and note mode switches."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "640px"
+      },
+      {
+        "name": "tablet",
+        "value": "900px"
+      },
+      {
+        "name": "compact-shell",
+        "value": "1100px"
+      },
+      {
+        "name": "notes-rail",
+        "value": "1240px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single main action in a view.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>New note</button>",
+      "css": ".ds-btn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border-radius:6px;font:500 12.5px Geist,ui-sans-serif,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;transition:background 140ms,border-color 140ms,color 140ms,transform 140ms}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid var(--accent,#4b5bd6);outline-offset:1px}.ds-btn-primary{background:var(--accent,#4b5bd6);color:var(--on-accent,#fff);box-shadow:inset 0 -1px 0 rgba(0,0,0,.12)}.ds-btn-primary:hover{background:color-mix(in srgb,var(--accent,#4b5bd6) 88%,#1d1c1a)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Everyday actions such as Edit or Cancel.",
+      "html": "<button class=\"ds-btn-secondary\">Edit</button>",
+      "css": ".ds-btn-secondary{height:30px;padding:0 11px;border-radius:6px;font:500 12.5px Geist,ui-sans-serif,system-ui,sans-serif;background:var(--surface,#fff);color:var(--text,#1d1c1a);border:1px solid var(--border-strong,#dad7d0);box-shadow:0 1px 2px rgba(28,25,20,.05);cursor:pointer;transition:background 140ms}.ds-btn-secondary:hover{background:var(--surface-2,#f6f5f2)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent,#4b5bd6);outline-offset:1px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis actions inside rails and toolbars.",
+      "html": "<button class=\"ds-btn-ghost\">Link note</button>",
+      "css": ".ds-btn-ghost{height:26px;padding:0 8px;border-radius:6px;font:500 12px Geist,ui-sans-serif,system-ui,sans-serif;background:none;border:0;color:var(--text-2,#57544e);cursor:pointer;transition:background 140ms,color 140ms}.ds-btn-ghost:hover{background:var(--surface-2,#f6f5f2);color:var(--text,#1d1c1a)}.ds-btn-ghost:focus-visible{outline:2px solid var(--accent,#4b5bd6);outline-offset:1px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Single-line input with an indigo focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search notes\">",
+      "css": ".ds-input{width:240px;height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--border-strong,#dad7d0);background:var(--surface,#fff);color:var(--text,#1d1c1a);font:400 13.5px Geist,ui-sans-serif,system-ui,sans-serif;caret-color:var(--accent,#4b5bd6);transition:border-color 140ms,box-shadow 140ms}.ds-input::placeholder{color:var(--text-3,#6b6760)}.ds-input:focus{outline:none;border-color:var(--accent,#4b5bd6);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#4b5bd6) 10%,transparent)}"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Rail rows; the active one is a sheet laid on the rail.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item on\">Notes</a><a class=\"ds-nav-item\">Tasks</a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:220px;padding:8px;background:var(--bg-side,#f4f3f0)}.ds-nav-item{display:flex;align-items:center;height:30px;padding:0 8px;border-radius:6px;color:var(--text-2,#57544e);font:450 13.5px Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background 140ms,color 140ms}.ds-nav-item:hover{background:var(--surface-3,#eeede9);color:var(--text,#1d1c1a)}.ds-nav-item.on{background:var(--surface,#fff);color:var(--text,#1d1c1a);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.05),0 0 0 1px var(--border,#e9e7e2)}"
+    },
+    {
+      "name": "Menu",
+      "kind": "custom",
+      "refersTo": "menu",
+      "description": "Floating option list with an indigo check on the chosen value.",
+      "html": "<div class=\"ds-menu\"><button class=\"ds-mi\">Rename</button><button class=\"ds-mi on\">Product / Roadmap<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg></button></div>",
+      "css": ".ds-menu{width:220px;padding:4px;border-radius:10px;background:var(--surface,#fff);box-shadow:0 12px 32px -8px rgba(28,25,20,.16),0 2px 6px -2px rgba(28,25,20,.06),0 0 0 1px var(--border,#e9e7e2)}.ds-mi{display:flex;width:100%;align-items:center;min-height:30px;padding:0 8px;border:0;border-radius:6px;background:none;text-align:left;color:var(--text,#1d1c1a);font:400 13.5px Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer}.ds-mi svg{margin-left:auto;color:var(--accent,#4b5bd6)}.ds-mi:hover,.ds-mi:focus-visible{background:var(--surface-2,#f6f5f2);outline:none}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Bordered container for grouped content; never nested.",
+      "html": "<section class=\"ds-panel\"><h2>Recent activity</h2><p>3 tasks moved to review.</p></section>",
+      "css": ".ds-panel{width:320px;border:1px solid var(--border,#e9e7e2);border-radius:10px;background:var(--surface,#fff);padding:12px 14px;font:400 13.5px Geist,ui-sans-serif,system-ui,sans-serif;color:var(--text,#1d1c1a)}.ds-panel h2{margin:0 0 6px;font-size:13.5px;font-weight:600}.ds-panel p{margin:0;color:var(--text-2,#57544e)}"
+    },
+    {
+      "name": "Label Chip",
+      "kind": "chip",
+      "refersTo": "label-chip",
+      "description": "Small bordered tag for task labels.",
+      "html": "<span class=\"ds-chip\"><i></i>Design</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px 0 6px;border-radius:5px;border:1px solid var(--border,#e9e7e2);background:var(--surface,#fff);color:var(--text-2,#57544e);font:400 12px Geist,ui-sans-serif,system-ui,sans-serif}.ds-chip i{width:7px;height:7px;border-radius:50%;background:#7652c2}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Notebook",
+    "overview": "Daybook is a notebook that a small team keeps open all day. The ground is warm paper, the text is graphite, and one ink colour marks what you chose, what you can follow and what you can do next. Nothing on the page competes with the work: tasks, notes and people sit in compact rows separated by hairlines, and the interface steps back so writing and finding things again stay fast.\n\nThe system is refined and restrained. Depth comes from tone (paper laid on paper) rather than shadow; shadows appear only on things that genuinely float above the page, such as menus, dialogs and dragged cards. Density is deliberate: 30px rows, 13.5px body text, a 4pt spacing scale and one horizontal gutter (24px) shared by every header, toolbar, list, table and board.\n\nLight and dark are two separate palettes, not an inversion. Dark mode keeps the paper warmth in near-black greys and lifts the indigo so it still reads as ink.\n\n- Warm paper neutrals with a single indigo accent\n- Geist for everything, Geist Mono only for code, Markdown source and measured values\n- Tonal layering for depth; shadows only on floating layers\n- Compact 30px rows, hairline dividers, 6–10px corners\n- One content gutter shared by every view",
+    "keyCharacteristics": [
+      "Warm paper neutrals with a single indigo accent",
+      "Geist for everything, Geist Mono only for code, Markdown source and measured values",
+      "Tonal layering for depth; shadows only on floating layers",
+      "Compact 30px rows, hairline dividers, 6–10px corners",
+      "One content gutter shared by every view"
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Indigo is the only accent. It marks selection, links, focus and the one primary action in view; it never decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Swappable Ink Rule",
+        "body": "The accent is a variable: users can switch it to blue, violet, teal, rose or graphite. Never hard-code the indigo hex in a component; always use the accent token so every accent choice works.",
+        "section": "colors"
+      },
+      {
+        "name": "The Small Steps Rule",
+        "body": "The scale moves in small steps (11, 12, 12.5, 13.5, 14.5, 16, 19, 23px). Hierarchy comes from weight and colour first, size second; nothing in the app is larger than 23px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Honest Mono Rule",
+        "body": "Monospace is for code, Markdown source, keys and figures that must align, never as a \"technical\" costume.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper-On-Paper Rule",
+        "body": "If a surface does not float above the page, it gets a tone or a hairline, not a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the accent token for every indigo use, so the user's accent choice applies everywhere.",
+      "**Do** separate panes with 1px hairlines and surfaces with tone.",
+      "**Do** keep readable text at Faded Pencil or darker, placeholders included.",
+      "**Do** start every view's content on the shared 24px gutter.",
+      "**Do** cover hover, focus, disabled, loading, empty and error for every control and view.",
+      "**Do** keep long-form reading at 15px with a 36rem measure (about 68 characters)."
+    ],
+    "donts": [
+      "**Don't** add a second accent hue; semantic colours only mark state.",
+      "**Don't** put shadows on surfaces that do not float.",
+      "**Don't** nest cards or wrap whole pages in cards.",
+      "**Don't** use a coloured bar down one side of a box for emphasis.",
+      "**Don't** exceed 23px type in the product UI.",
+      "**Don't** use Ghost Pencil for text."
+    ]
+  }
+}

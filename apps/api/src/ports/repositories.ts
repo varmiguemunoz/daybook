@@ -1,4 +1,4 @@
-import type { Activity, Comment, Member, Notification, Task, TaskQuery, Team, Workspace } from '@daybook/domain';
+import type { Activity, Comment, Folder, Member, Note, NoteSummary, Notification, Task, TaskQuery, Team, Workspace } from '@daybook/domain';
 
 export interface TaskRepository {
   list(workspaceId: string, query: TaskQuery): Promise<Task[]>;
@@ -54,6 +54,34 @@ export interface NotificationRepository {
   markAllRead(userId: string): Promise<number>;
 }
 
+export interface FolderRepository {
+  listByWorkspace(workspaceId: string): Promise<Folder[]>;
+  findById(workspaceId: string, id: string): Promise<Folder | null>;
+  create(folder: Folder): Promise<Folder>;
+  update(workspaceId: string, id: string, patch: Partial<Folder>): Promise<Folder | null>;
+  moveChildren(workspaceId: string, fromParentId: string, toParentId: string | null): Promise<void>;
+  remove(workspaceId: string, id: string): Promise<boolean>;
+}
+
+export interface NoteQuery {
+  folderId?: string | null;
+  search?: string;
+}
+
+export interface NoteRepository {
+  list(workspaceId: string, query: NoteQuery): Promise<NoteSummary[]>;
+  findById(workspaceId: string, id: string): Promise<Note | null>;
+  findByIds(workspaceId: string, ids: string[]): Promise<NoteSummary[]>;
+  findByTitles(workspaceId: string, lowerCaseTitles: string[]): Promise<NoteSummary[]>;
+  findLinkingTo(workspaceId: string, id: string): Promise<NoteSummary[]>;
+  create(note: Note): Promise<Note>;
+  update(workspaceId: string, id: string, patch: Partial<Note>): Promise<Note | null>;
+  updateIfCurrent(workspaceId: string, id: string, updatedAt: number, patch: Partial<Note>): Promise<Note | null>;
+  moveFolder(workspaceId: string, fromFolderId: string, toFolderId: string | null): Promise<void>;
+  removeLink(workspaceId: string, targetId: string): Promise<void>;
+  remove(workspaceId: string, id: string): Promise<boolean>;
+}
+
 export interface Repositories {
   tasks: TaskRepository;
   members: MemberRepository;
@@ -62,4 +90,6 @@ export interface Repositories {
   teams: TeamRepository;
   comments: CommentRepository;
   notifications: NotificationRepository;
+  folders: FolderRepository;
+  notes: NoteRepository;
 }

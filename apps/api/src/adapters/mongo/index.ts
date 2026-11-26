@@ -3,6 +3,7 @@ import { connectDatabase, disconnectDatabase } from './connection';
 import { MongoActivityRepository, MongoMemberRepository, MongoWorkspaceRepository } from './support-repositories';
 import { MongoCommentRepository, MongoNotificationRepository, MongoTeamRepository } from './extra-repositories';
 import { MongoTaskRepository } from './task-repository';
+import { MongoFolderRepository, MongoNoteRepository } from './notes-repositories';
 
 export interface MongoRepositories extends Repositories {
   close: () => Promise<void>;
@@ -19,6 +20,8 @@ export async function createMongoRepositories(uri: string): Promise<MongoReposit
     teams: new MongoTeamRepository(),
     comments: new MongoCommentRepository(),
     notifications: new MongoNotificationRepository(),
+    folders: new MongoFolderRepository(),
+    notes: new MongoNoteRepository(),
     close: disconnectDatabase,
   };
 }

@@ -11,6 +11,10 @@ const INVALIDATES: Record<string, string[]> = {
   'comment.created': ['comments'],
   'member.removed': ['members', 'teams', 'bootstrap'],
   'notification.created': ['notifications'],
+  'note.created': ['notes'],
+  'note.updated': ['notes', 'note'],
+  'note.deleted': ['notes', 'note'],
+  'folder.changed': ['folders', 'notes'],
 };
 
 async function listen(signal: AbortSignal, onOpen: () => void, onEvent: (type: string) => void): Promise<void> {

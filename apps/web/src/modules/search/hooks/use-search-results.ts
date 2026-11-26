@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import type { Member, Task, Team } from '@daybook/domain';
+import type { Member, NoteSummary, Task, Team } from '@daybook/domain';
 import { apiFetch, queryKeys } from '../../core/services/api-client';
 import { useTaskUi } from '../../tasks/states/task-ui-store';
 
@@ -18,6 +18,7 @@ interface SearchResult {
   tasks: Task[];
   members: Member[];
   teams: Team[];
+  notes: NoteSummary[];
 }
 
 const MIN_QUERY = 2;
@@ -29,6 +30,7 @@ const PAGES: Array<[label: string, path: string, icon: string]> = [
   ['Board', '/board', 'square-kanban'],
   ['Table', '/table', 'table-2'],
   ['Calendar', '/calendar', 'calendar'],
+  ['Notes', '/notes', 'notebook-pen'],
   ['Members', '/members', 'users'],
   ['Activity', '/activity', 'activity'],
   ['Notifications', '/notifications', 'bell'],
@@ -91,6 +93,7 @@ function useRemoteItems(query: string): SearchItem[] {
       icon: team.icon,
       run: () => navigate(`/settings?section=teams&team=${team.id}`),
     })),
+    ...data.notes.map(note => ({ id: note.id, group: 'Notes', label: note.title, icon: 'file-text', run: () => navigate(`/notes?note=${note.id}`) })),
   ];
 }
 

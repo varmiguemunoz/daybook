@@ -16,6 +16,7 @@ export function BottomNav() {
     <nav className="bottomnav" aria-label="Primary">
       {item('/', 'Home', 'house')}
       {item('/tasks', 'My Tasks', 'circle-check')}
+      {item('/notes', 'Notes', 'notebook-pen')}
       {item('/notifications', 'Inbox', 'inbox')}
       <button type="button">
         <Icon name="ellipsis" size={19} />

@@ -5,6 +5,7 @@ const PERMISSIONS: Array<[string, number, number]> = [
   ['View projects & tasks', 1, 1],
   ['Comment on tasks', 1, 1],
   ['Create and edit tasks', 1, 1],
+  ['Create and edit notes', 1, 1],
   ['Create projects', 1, 1],
   ['Delete projects', 1, 0],
   ['Invite members', 1, 0],

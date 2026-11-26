@@ -1,12 +1,12 @@
 import type { Role } from './vocab/role';
 
-export const PERMISSIONS = ['project:read', 'project:write', 'project:delete', 'task:write', 'comment:write', 'workspace:manage'] as const;
+export const PERMISSIONS = ['project:read', 'project:write', 'project:delete', 'task:write', 'comment:write', 'note:write', 'workspace:manage'] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
 const MATRIX: Record<Role, readonly Permission[]> = {
   admin: PERMISSIONS,
-  member: ['project:read', 'project:write', 'task:write', 'comment:write'],
+  member: ['project:read', 'project:write', 'task:write', 'comment:write', 'note:write'],
 };
 
 export function can(role: Role, permission: Permission): boolean {

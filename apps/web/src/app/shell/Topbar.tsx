@@ -3,9 +3,8 @@ import type { Member } from '@daybook/domain';
 import { Icon } from '../../modules/core/components/Icon';
 import { Avatar } from '../../modules/core/components/Avatar';
 import { useUiStore } from '../../modules/core/states/ui-store';
+import { MOD } from '../../modules/core/utils/platform';
 import { PRIMARY_NAV, WORKSPACE_NAV } from './nav-items';
-
-const MOD = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl';
 
 function labelFor(pathname: string): string {
   const match = [...WORKSPACE_NAV, ...PRIMARY_NAV].find(entry => entry.to === pathname);

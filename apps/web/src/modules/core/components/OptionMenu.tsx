@@ -29,7 +29,7 @@ function moveFocus(list: HTMLElement, key: string): boolean {
   return true;
 }
 
-function OptionList<Value extends string>({
+export function OptionList<Value extends string>({
   label,
   value,
   options,

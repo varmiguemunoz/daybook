@@ -7,7 +7,7 @@ const TaskDocument = modelFor(TaskModel) as any;
 const TaskSequenceDocument = modelFor(TaskSequenceModel) as any;
 const KEY_NUMBER = { $convert: { input: { $arrayElemAt: [{ $split: ['$key', '-'] }, -1] }, to: 'int', onError: 0, onNull: 0 } };
 
-function escapeRegExp(value: string): string {
+export function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 

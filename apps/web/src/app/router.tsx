@@ -13,6 +13,7 @@ const CalendarPage = lazy(() => import('../pages/CalendarPage').then(module => (
 const MembersPage = lazy(() => import('../pages/MembersPage').then(module => ({ default: module.MembersPage })));
 const ActivityPage = lazy(() => import('../pages/ActivityPage').then(module => ({ default: module.ActivityPage })));
 const NotificationsPage = lazy(() => import('../pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })));
+const NotesPage = lazy(() => import('../pages/NotesPage').then(module => ({ default: module.NotesPage })));
 const SettingsPage = lazy(() => import('../pages/SettingsPage').then(module => ({ default: module.SettingsPage })));
 
 export function AppRoutes() {
@@ -28,6 +29,7 @@ export function AppRoutes() {
               <Route path="board" element={<BoardPage />} />
               <Route path="table" element={<TablePage />} />
               <Route path="calendar" element={<CalendarPage />} />
+              <Route path="notes" element={<NotesPage />} />
               <Route path="members" element={<MembersPage />} />
               <Route path="activity" element={<ActivityPage />} />
               <Route path="settings" element={<SettingsPage />} />

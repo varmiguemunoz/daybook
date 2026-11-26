@@ -13,3 +13,6 @@ export * from './schemas/task';
 export * from './schemas/comment';
 export * from './schemas/activity';
 export * from './schemas/filters';
+export * from './schemas/folder';
+export * from './schemas/note';
+export * from './wikilinks';

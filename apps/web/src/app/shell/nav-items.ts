@@ -15,6 +15,7 @@ export const WORKSPACE_NAV: NavEntry[] = [
   { to: '/board', label: 'Board', icon: 'square-kanban' },
   { to: '/table', label: 'Table', icon: 'table-2' },
   { to: '/calendar', label: 'Calendar', icon: 'calendar' },
+  { to: '/notes', label: 'Notes', icon: 'notebook-pen' },
   { to: '/members', label: 'Members', icon: 'users' },
   { to: '/activity', label: 'Activity', icon: 'activity' },
 ];

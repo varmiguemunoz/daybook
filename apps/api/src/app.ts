@@ -16,6 +16,8 @@ import { streamRoutes } from './modules/realtime/stream-routes';
 import { searchRoutes } from './modules/search/search-routes';
 import { activityRoutes } from './modules/activity/activity-routes';
 import { clerkWebhookRoutes } from './modules/webhooks/clerk-routes';
+import { folderRoutes } from './modules/folders/folder-routes';
+import { noteRoutes } from './modules/notes/note-routes';
 
 export interface AppDependencies {
   repositories: Repositories;
@@ -53,6 +55,8 @@ function apiRoutes(repositories: Repositories, removeMembership: RemoveMembershi
   api.route('/notifications', notificationRoutes(repositories));
   api.route('/search', searchRoutes(repositories));
   api.route('/activity', activityRoutes(repositories));
+  api.route('/folders', folderRoutes(repositories));
+  api.route('/notes', noteRoutes(repositories));
   return api;
 }
 
