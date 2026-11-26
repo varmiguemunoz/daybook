@@ -1,7 +1,6 @@
 import { Schema } from 'mongoose';
 
 const subtaskSchema = new Schema({ id: String, title: String, done: Boolean }, { _id: false });
-const attachmentSchema = new Schema({ id: String, name: String, type: String, size: String, uploadedBy: String, at: Number }, { _id: false });
 
 const taskSchema = new Schema(
   {
@@ -17,7 +16,6 @@ const taskSchema = new Schema(
     dueDate: { type: String, default: null },
     labels: { type: [String], default: [] },
     subtasks: { type: [subtaskSchema], default: [] },
-    attachments: { type: [attachmentSchema], default: [] },
     dependencyIds: { type: [String], default: [] },
     description: { type: String, default: '' },
     estimate: { type: String, default: null },

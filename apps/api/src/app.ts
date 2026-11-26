@@ -11,8 +11,6 @@ import type { ConfirmMembership } from './http/auth';
 import { scope } from './http/context';
 import { teamRoutes } from './modules/teams/team-routes';
 import { commentRoutes } from './modules/comments/comment-routes';
-import { eventRoutes } from './modules/events/event-routes';
-import { viewRoutes } from './modules/views/view-routes';
 import { notificationRoutes } from './modules/notifications/notification-routes';
 import { streamRoutes } from './modules/realtime/stream-routes';
 import { searchRoutes } from './modules/search/search-routes';
@@ -52,8 +50,6 @@ function apiRoutes(repositories: Repositories, removeMembership: RemoveMembershi
   api.route('/teams', teamRoutes(repositories));
   api.route('/comments', commentRoutes(repositories));
   api.route('/events/stream', streamRoutes());
-  api.route('/events', eventRoutes(repositories));
-  api.route('/views', viewRoutes(repositories));
   api.route('/notifications', notificationRoutes(repositories));
   api.route('/search', searchRoutes(repositories));
   api.route('/activity', activityRoutes(repositories));

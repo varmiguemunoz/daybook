@@ -14,9 +14,7 @@ export async function getMember(repositories: Repositories, workspaceId: string,
 }
 
 export async function updateMember(repositories: Repositories, workspaceId: string, id: string, input: UpdateMemberInput): Promise<Member> {
-  const current = await getMember(repositories, workspaceId, id);
-  const preferences = input.preferences ? { ...current.preferences, ...input.preferences } : current.preferences;
-  const updated = await repositories.members.update(workspaceId, id, { ...input, preferences: preferences as Member['preferences'] });
+  const updated = await repositories.members.update(workspaceId, id, input);
   if (!updated) throw notFound('Member');
   return updated;
 }

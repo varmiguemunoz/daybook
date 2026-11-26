@@ -15,8 +15,6 @@
     "preview": "npm run preview --workspace @daybook/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "test:visual": "playwright test",
-    "visual:baseline": "playwright test --update-snapshots",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

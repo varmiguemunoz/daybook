@@ -36,4 +36,3 @@ export const notificationSchema = z.object({
 });
 
 export type Notification = z.infer<typeof notificationSchema>;
-export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -29,5 +29,3 @@ export const updateCommentInputSchema = z.object({ body: commentBody });
 export const reactionInputSchema = z.object({ emoji });
 
 export type CreateCommentInput = z.infer<typeof createCommentInputSchema>;
-export type UpdateCommentInput = z.infer<typeof updateCommentInputSchema>;
-export type ReactionInput = z.infer<typeof reactionInputSchema>;

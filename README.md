@@ -25,12 +25,9 @@ npm run dev:api         # Hono API on http://localhost:3001
 npm run build           # build every workspace
 npm run typecheck       # tsc --noEmit per workspace
 npm test                # Vitest per workspace
-npm run test:visual     # capture the legacy screens into tests/visual/baseline
 npm run lint            # ESLint across the repo
 npm run format          # Prettier
 ```
-
-First run of the visual harness needs the browser once: `npx playwright install chromium`.
 
 ## Rules the tooling enforces
 

@@ -1,16 +1,9 @@
-import type { Activity, CalendarEvent, Comment, FileRecord, Member, Notification, SavedView, Task, Team, Workspace } from '@daybook/domain';
+import type { Activity, Comment, Member, Notification, Task, Team, Workspace } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
 import { Collection } from './collection';
 import { MemoryTaskRepository } from './task-repository';
 import { MemoryActivityRepository, MemoryMemberRepository, MemoryWorkspaceRepository } from './support-repositories';
-import {
-  MemoryCalendarEventRepository,
-  MemoryCommentRepository,
-  MemoryFileRepository,
-  MemoryNotificationRepository,
-  MemorySavedViewRepository,
-  MemoryTeamRepository,
-} from './extra-repositories';
+import { MemoryCommentRepository, MemoryNotificationRepository, MemoryTeamRepository } from './extra-repositories';
 import { defaultWorkspace, members, tasks } from '../../fixtures/seed';
 
 export interface SeedData {
@@ -27,9 +20,6 @@ export function createMemoryRepositories(seed: SeedData = {}): Repositories {
     activity: new Collection<Activity>(seed.activity ?? []),
     teams: new Collection<Team>([]),
     comments: new Collection<Comment>([]),
-    files: new Collection<FileRecord>([]),
-    events: new Collection<CalendarEvent>([]),
-    views: new Collection<SavedView>([]),
     notifications: new Collection<Notification>([]),
   };
 
@@ -40,9 +30,6 @@ export function createMemoryRepositories(seed: SeedData = {}): Repositories {
     activity: new MemoryActivityRepository(collections.activity),
     teams: new MemoryTeamRepository(collections.teams),
     comments: new MemoryCommentRepository(collections.comments),
-    files: new MemoryFileRepository(collections.files),
-    events: new MemoryCalendarEventRepository(collections.events),
-    views: new MemorySavedViewRepository(collections.views),
     notifications: new MemoryNotificationRepository(collections.notifications),
   };
 }

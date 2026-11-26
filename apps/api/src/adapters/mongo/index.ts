@@ -1,14 +1,7 @@
 import type { Repositories } from '../../ports/repositories';
 import { connectDatabase, disconnectDatabase } from './connection';
 import { MongoActivityRepository, MongoMemberRepository, MongoWorkspaceRepository } from './support-repositories';
-import {
-  MongoCalendarEventRepository,
-  MongoCommentRepository,
-  MongoFileRepository,
-  MongoNotificationRepository,
-  MongoSavedViewRepository,
-  MongoTeamRepository,
-} from './extra-repositories';
+import { MongoCommentRepository, MongoNotificationRepository, MongoTeamRepository } from './extra-repositories';
 import { MongoTaskRepository } from './task-repository';
 
 export interface MongoRepositories extends Repositories {
@@ -25,9 +18,6 @@ export async function createMongoRepositories(uri: string): Promise<MongoReposit
     activity: new MongoActivityRepository(),
     teams: new MongoTeamRepository(),
     comments: new MongoCommentRepository(),
-    files: new MongoFileRepository(),
-    events: new MongoCalendarEventRepository(),
-    views: new MongoSavedViewRepository(),
     notifications: new MongoNotificationRepository(),
     close: disconnectDatabase,
   };

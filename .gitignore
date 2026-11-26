@@ -7,7 +7,5 @@ __MACOSX/
 .env*
 !.env.example
 !apps/**/.env.example
-test-results/
-playwright-report/
 
 .atl/

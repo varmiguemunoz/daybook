@@ -18,7 +18,6 @@ const memberSchema = new Schema(
     timezone: String,
     lastSeenAt: { type: Number, default: null },
     clerkUserId: { type: String, required: true },
-    preferences: { type: Schema.Types.Mixed, default: {} },
     createdAt: Number,
     updatedAt: Number,
   },
@@ -80,64 +79,6 @@ const commentSchema = new Schema(
 );
 commentSchema.index({ workspaceId: 1, taskId: 1, createdAt: 1 });
 export const CommentModel = { name: 'Comment', schema: commentSchema };
-
-const fileSchema = new Schema(
-  {
-    _id: String,
-    workspaceId: { type: String, required: true },
-    projectId: { type: String, required: true, index: true },
-    taskId: { type: String, default: null, index: true },
-    name: String,
-    type: String,
-    size: String,
-    sizeBytes: Number,
-    mimeType: String,
-    r2Key: String,
-    r2Bucket: String,
-    uploadedBy: String,
-    at: { type: Number, index: true },
-  },
-  { versionKey: false },
-);
-fileSchema.index({ workspaceId: 1, at: -1 });
-export const FileModel = { name: 'File', schema: fileSchema };
-
-const eventSchema = new Schema(
-  {
-    _id: String,
-    workspaceId: { type: String, required: true, index: true },
-    projectId: { type: String, default: null },
-    title: String,
-    date: { type: String, index: true },
-    time: String,
-    createdAt: Number,
-    createdBy: String,
-  },
-  { versionKey: false },
-);
-eventSchema.index({ workspaceId: 1, date: 1 });
-export const EventModel = { name: 'CalendarEvent', schema: eventSchema };
-
-const savedViewSchema = new Schema(
-  {
-    _id: String,
-    workspaceId: { type: String, required: true, index: true },
-    ownerId: String,
-    projectId: { type: String, default: null },
-    name: String,
-    type: String,
-    filters: { type: [Schema.Types.Mixed], default: [] },
-    sort: { type: Schema.Types.Mixed, default: { field: 'manual', direction: 1 } },
-    group: String,
-    query: String,
-    hiddenColumns: { type: [String], default: [] },
-    createdAt: Number,
-    updatedAt: Number,
-  },
-  { versionKey: false },
-);
-savedViewSchema.index({ workspaceId: 1, ownerId: 1 });
-export const SavedViewModel = { name: 'SavedView', schema: savedViewSchema };
 
 const notificationSchema = new Schema(
   {

@@ -12,15 +12,6 @@ export const subtaskSchema = z.object({
   done: z.boolean(),
 });
 
-export const attachmentSchema = z.object({
-  id: idSchema,
-  name: nonEmptyText,
-  type: z.string().max(16),
-  size: z.string().max(16),
-  uploadedBy: idSchema,
-  at: timestampSchema,
-});
-
 export const estimateSchema = z.string().regex(/^\d{1,3}[hdw]$/, 'Expected a duration like 2d or 4h');
 
 export const taskSchema = z.object({
@@ -36,7 +27,6 @@ export const taskSchema = z.object({
   dueDate: isoDateSchema.nullable().default(null),
   labels: z.array(z.enum(LABEL_IDS)).default([]),
   subtasks: z.array(subtaskSchema).default([]),
-  attachments: z.array(attachmentSchema).default([]),
   dependencyIds: z.array(idSchema).default([]),
   description: htmlSchema.default(''),
   estimate: estimateSchema.nullable().default(null),
@@ -49,9 +39,6 @@ export const taskSchema = z.object({
 });
 
 export type Task = z.infer<typeof taskSchema>;
-export type Subtask = z.infer<typeof subtaskSchema>;
-export type Attachment = z.infer<typeof attachmentSchema>;
-export type Recurrence = (typeof RECURRENCES)[number];
 
 const editableTaskFields = {
   title: nonEmptyText,

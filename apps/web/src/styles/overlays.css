@@ -398,3 +398,54 @@ dialog.drawer-wrap::backdrop {
     transform: translateY(4px);
   }
 }
+.pop .rdp-root {
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: var(--accent-soft);
+  --rdp-today-color: var(--accent);
+  --rdp-day-height: 34px;
+  --rdp-day-width: 34px;
+  --rdp-day_button-height: 32px;
+  --rdp-day_button-width: 32px;
+  --rdp-day_button-border-radius: var(--r-sm);
+  --rdp-selected-border: 0;
+  --rdp-nav-height: 32px;
+  --rdp-nav_button-height: 28px;
+  --rdp-nav_button-width: 28px;
+  padding: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.pop .rdp-month_caption {
+  padding-left: 6px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.pop .rdp-weekday {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  opacity: 1;
+}
+.pop .rdp-chevron {
+  fill: var(--text-2);
+}
+.pop .rdp-button_previous,
+.pop .rdp-button_next {
+  border-radius: var(--r-sm);
+}
+.pop .rdp-button_previous:hover,
+.pop .rdp-button_next:hover,
+.pop .rdp-day_button:hover {
+  background: var(--surface-2);
+}
+.pop .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 600;
+}
+.pop .rdp-selected {
+  font-size: inherit;
+}
+.pop .rdp-selected .rdp-day_button,
+.pop .rdp-selected .rdp-day_button:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}

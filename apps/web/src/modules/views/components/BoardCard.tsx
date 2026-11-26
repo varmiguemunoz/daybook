@@ -61,12 +61,6 @@ function CardMeta({ task, members, memberById }: CardProps) {
           <Icon name="repeat" size={12} />
         </span>
       )}
-      {task.attachments.length > 0 && (
-        <span className="m" aria-label={`${task.attachments.length} attachments`}>
-          <Icon name="paperclip" size={12} />
-          {task.attachments.length}
-        </span>
-      )}
       <span style={{ marginLeft: 'auto' }}>
         <AssigneeMenu task={task} members={members} className="m">
           <Avatar member={assignee} className="sm" tip={false} />

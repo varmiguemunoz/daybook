@@ -54,7 +54,6 @@ function buildTask(input: CreateTaskInput, workspace: Workspace, number: number)
     key: `TSK-${number}`,
     order: number,
     subtasks: [],
-    attachments: [],
     dependencyIds: [],
     favorite: false,
     createdAt: now,

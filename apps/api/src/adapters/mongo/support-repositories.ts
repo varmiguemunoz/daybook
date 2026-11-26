@@ -1,25 +1,13 @@
 import type { Activity, Member, Workspace } from '@daybook/domain';
 import { modelFor, toDomain, upsertUpdate } from './connection';
-import {
-  ActivityModel,
-  CommentModel,
-  EventModel,
-  FileModel,
-  MemberModel,
-  NotificationModel,
-  SavedViewModel,
-  TeamModel,
-  WorkspaceModel,
-} from './models/support';
+import { ActivityModel, CommentModel, MemberModel, NotificationModel, TeamModel, WorkspaceModel } from './models/support';
 import { TaskModel, TaskSequenceModel } from './models/task';
 
 const WorkspaceDocument = modelFor(WorkspaceModel);
 const MemberDocument = modelFor(MemberModel);
 const ActivityDocument = modelFor(ActivityModel);
 const TaskSequenceDocument = modelFor(TaskSequenceModel);
-const SCOPED_DOCUMENTS = [MemberModel, ActivityModel, TeamModel, CommentModel, FileModel, EventModel, SavedViewModel, NotificationModel, TaskModel].map(
-  modelFor,
-);
+const SCOPED_DOCUMENTS = [MemberModel, ActivityModel, TeamModel, CommentModel, NotificationModel, TaskModel].map(modelFor);
 const UPSERT = { upsert: true, returnDocument: 'after', lean: true };
 
 export class MongoMemberRepository {

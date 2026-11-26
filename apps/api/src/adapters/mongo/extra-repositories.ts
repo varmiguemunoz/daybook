@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { CalendarEvent, Comment, FileRecord, Notification, SavedView, Team } from '@daybook/domain';
+import type { Comment, Notification, Team } from '@daybook/domain';
 import { modelFor, toDomain } from './connection';
-import { CommentModel, EventModel, FileModel, NotificationModel, SavedViewModel, TeamModel } from './models/support';
+import { CommentModel, NotificationModel, TeamModel } from './models/support';
 
 const TeamDocument = modelFor(TeamModel) as any;
 const CommentDocument = modelFor(CommentModel) as any;
-const FileDocument = modelFor(FileModel) as any;
-const EventDocument = modelFor(EventModel) as any;
-const SavedViewDocument = modelFor(SavedViewModel) as any;
 const NotificationDocument = modelFor(NotificationModel) as any;
 const RETURN_NEW = { returnDocument: 'after', lean: true };
 
@@ -56,59 +53,6 @@ export class MongoCommentRepository {
 
   update = (workspaceId: string, id: string, patch: Partial<Comment>) => scopedUpdate<Comment>(CommentDocument, workspaceId, id, patch);
   remove = (workspaceId: string, id: string) => scopedRemove(CommentDocument, workspaceId, id);
-}
-
-export class MongoFileRepository {
-  async listByWorkspace(workspaceId: string): Promise<FileRecord[]> {
-    return many<FileRecord>(await FileDocument.find({ workspaceId }).sort({ at: -1 }).lean());
-  }
-
-  async listByTask(workspaceId: string, taskId: string): Promise<FileRecord[]> {
-    return many<FileRecord>(await FileDocument.find({ workspaceId, taskId }).sort({ at: -1 }).lean());
-  }
-
-  async findById(workspaceId: string, id: string): Promise<FileRecord | null> {
-    return toDomain<FileRecord>(await FileDocument.findOne({ _id: id, workspaceId }).lean());
-  }
-
-  async create(file: FileRecord): Promise<FileRecord> {
-    return toDomain<FileRecord>(await FileDocument.create({ _id: file.id, ...file })) as FileRecord;
-  }
-
-  remove = (workspaceId: string, id: string) => scopedRemove(FileDocument, workspaceId, id);
-}
-
-export class MongoCalendarEventRepository {
-  async listByWorkspace(workspaceId: string, from?: string, to?: string): Promise<CalendarEvent[]> {
-    const date = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
-    const filter = from || to ? { workspaceId, date } : { workspaceId };
-    return many<CalendarEvent>(await EventDocument.find(filter).sort({ date: 1 }).lean());
-  }
-
-  async create(event: CalendarEvent): Promise<CalendarEvent> {
-    return toDomain<CalendarEvent>(await EventDocument.create({ _id: event.id, ...event })) as CalendarEvent;
-  }
-
-  update = (workspaceId: string, id: string, patch: Partial<CalendarEvent>) => scopedUpdate<CalendarEvent>(EventDocument, workspaceId, id, patch);
-  remove = (workspaceId: string, id: string) => scopedRemove(EventDocument, workspaceId, id);
-}
-
-export class MongoSavedViewRepository {
-  async listByWorkspace(workspaceId: string, ownerId?: string): Promise<SavedView[]> {
-    const filter = ownerId ? { workspaceId, ownerId } : { workspaceId };
-    return many<SavedView>(await SavedViewDocument.find(filter).lean());
-  }
-
-  async findById(workspaceId: string, id: string): Promise<SavedView | null> {
-    return toDomain<SavedView>(await SavedViewDocument.findOne({ _id: id, workspaceId }).lean());
-  }
-
-  async create(view: SavedView): Promise<SavedView> {
-    return toDomain<SavedView>(await SavedViewDocument.create({ _id: view.id, ...view })) as SavedView;
-  }
-
-  update = (workspaceId: string, id: string, patch: Partial<SavedView>) => scopedUpdate<SavedView>(SavedViewDocument, workspaceId, id, patch);
-  remove = (workspaceId: string, id: string) => scopedRemove(SavedViewDocument, workspaceId, id);
 }
 
 export class MongoNotificationRepository {
