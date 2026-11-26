@@ -9,3 +9,8 @@ __MACOSX/
 !apps/**/.env.example
 
 .atl/
+docs/
+doc/
+
+# Local AI agent settings
+.claude/settings.local.json

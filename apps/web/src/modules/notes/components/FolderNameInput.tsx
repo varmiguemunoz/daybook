@@ -31,11 +31,11 @@ export function FolderNameInput({ initial = '', depth, label, onSubmit, onCancel
   }
 
   return (
-    <div className="nrow editing" style={{ '--depth': depth } as CSSProperties}>
-      <span className="nrow-chev" />
+    <div className="tree-row editing" style={{ '--depth': depth } as CSSProperties}>
+      <span className="tree-row-chev" />
       <Icon name="folder" size={15} />
       <input
-        className="nrow-input"
+        className="tree-row-input"
         aria-label={label}
         value={name}
         maxLength={200}

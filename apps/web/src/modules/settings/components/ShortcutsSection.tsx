@@ -1,10 +1,12 @@
-const SHORTCUTS: Array<[string, string]> = [
-  ['Search or jump to', '⌘K'],
-  ['New task', 'C'],
-  ['New project', 'P'],
-  ['Toggle sidebar', '['],
-  ['Close dialog', 'Esc'],
-  ['Open command menu', '⌘/'],
+import { MOD } from '../../core/utils/platform';
+
+const SHORTCUTS: Array<[string, string[]]> = [
+  ['Search or jump to', [MOD, 'K']],
+  ['Move through results and menus', ['↑', '↓']],
+  ['Close a dialog or menu', ['Esc']],
+  ['Save the note you are editing', [MOD, 'S']],
+  ['Stop editing a note', ['Esc']],
+  ['Pick a note after typing [[', ['Enter']],
 ];
 
 export function ShortcutsSection() {
@@ -18,8 +20,10 @@ export function ShortcutsSection() {
             <div>
               <div className="t">{label}</div>
             </div>
-            <div className="row">
-              <kbd>{keys}</kbd>
+            <div className="row" style={{ gap: 4 }}>
+              {keys.map(key => (
+                <kbd key={key}>{key}</kbd>
+              ))}
             </div>
           </div>
         ))}

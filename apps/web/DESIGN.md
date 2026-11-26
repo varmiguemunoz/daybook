@@ -176,7 +176,7 @@ A paper-and-ink palette: tinted warm neutrals carry the whole surface and one in
 
 **The One Ink Rule.** Indigo is the only accent. It marks selection, links, focus and the one primary action in view; it never decorates.
 
-**The Swappable Ink Rule.** The accent is a variable: users can switch it to blue, violet, teal, rose or graphite. Never hard-code the indigo hex in a component; always use the accent token so every accent choice works.
+**The Swappable Ink Rule.** The accent is a variable, and the tokens already define blue, violet, teal, rose and graphite alternates for a future accent setting. Never hard-code the indigo hex in a component; always use the accent token.
 
 ## Typography
 
@@ -269,7 +269,7 @@ The notes explorer is the navigation rail's language applied to content: 28px ro
 
 ### Do:
 
-- **Do** use the accent token for every indigo use, so the user's accent choice applies everywhere.
+- **Do** use the accent token for every indigo use, never the hex.
 - **Do** separate panes with 1px hairlines and surfaces with tone.
 - **Do** keep readable text at Faded Pencil or darker, placeholders included.
 - **Do** start every view's content on the shared 24px gutter.

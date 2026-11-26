@@ -31,13 +31,13 @@ export function FolderRow({ folder, depth, open, selected, menuRef, onToggle, on
   const state = `${selected ? 'sel' : ''} ${drop.isOver ? 'drop-over' : ''} ${drag.isDragging ? 'dragging' : ''}`;
 
   return (
-    <div ref={drop.setNodeRef} className={`nrow folder ${state}`.replace(/\s+/g, ' ').trim()} style={{ '--depth': depth } as CSSProperties}>
-      <button ref={drag.setNodeRef} {...drag.listeners} type="button" className="nrow-main" aria-expanded={open} onClick={onToggle}>
-        <Icon name="chevron-right" size={13} className="nrow-chev" />
+    <div ref={drop.setNodeRef} className={`tree-row folder ${state}`.replace(/\s+/g, ' ').trim()} style={{ '--depth': depth } as CSSProperties}>
+      <button ref={drag.setNodeRef} {...drag.listeners} type="button" className="tree-row-main" aria-expanded={open} onClick={onToggle}>
+        <Icon name="chevron-right" size={13} className="tree-row-chev" />
         <Icon name={open ? 'folder-open' : 'folder'} size={15} />
         <span className="trunc">{folder.name}</span>
       </button>
-      <span ref={menuRef} className="nrow-menu">
+      <span ref={menuRef} className="tree-row-menu">
         <OptionMenu label={`Actions for ${folder.name}`} options={OPTIONS} onSelect={onAction} className="ibtn ibtn-xs">
           <Icon name="ellipsis" size={14} />
         </OptionMenu>

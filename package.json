@@ -1,6 +1,7 @@
 {
   "name": "daybook",
   "version": "2.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Daybook: personal tasks and notes by organisation. React + Vite client, Hono API, MongoDB.",
   "type": "module",
@@ -27,7 +28,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.50.0",
     "@types/node": "^22.10.0",
     "eslint": "^10.15.0",
     "globals": "^17.14.0",

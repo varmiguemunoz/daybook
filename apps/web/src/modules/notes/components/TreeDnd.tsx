@@ -28,7 +28,7 @@ export function TreeDnd({ folders, children }: { folders: Folder[]; children: Re
       <RootDrop>{children}</RootDrop>
       <DragOverlay dropAnimation={null}>
         {dnd.dragging && (
-          <div className="nrow drag-ghost">
+          <div className="tree-row drag-ghost">
             <Icon name={dnd.dragging.kind === 'note' ? 'file-text' : 'folder'} size={15} />
             <span className="trunc">{dnd.dragging.title}</span>
           </div>

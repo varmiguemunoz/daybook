@@ -7,9 +7,9 @@ const PLUGINS = [remarkGfm, remarkWikiLinks];
 // Raw HTML stays inert because rehype-raw is never added.
 const COMPONENTS: Components = { a: MarkdownAnchor };
 
-function MarkdownBody({ body, className = 'md' }: { body: string; className?: string }) {
+function MarkdownBody({ body }: { body: string }) {
   return (
-    <div className={className}>
+    <div className="markdown">
       <Markdown remarkPlugins={PLUGINS} components={COMPONENTS}>
         {body}
       </Markdown>

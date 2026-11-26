@@ -19,15 +19,15 @@ export function NoteListItem({ note, depth, active, meta, onOpen }: Props) {
         ref={drag.setNodeRef}
         {...drag.listeners}
         type="button"
-        className={`nrow note ${active ? 'on' : ''} ${drag.isDragging ? 'dragging' : ''}`.trim()}
+        className={`tree-row note ${active ? 'on' : ''} ${drag.isDragging ? 'dragging' : ''}`.trim()}
         style={{ '--depth': depth } as CSSProperties}
         aria-current={active ? 'page' : undefined}
         onClick={() => onOpen(note)}
       >
-        <span className="nrow-chev" />
+        <span className="tree-row-chev" />
         <Icon name="file-text" size={15} />
         <span className="trunc">{note.title}</span>
-        {meta && <span className="nrow-meta trunc">{meta}</span>}
+        {meta && <span className="tree-row-meta trunc">{meta}</span>}
       </button>
     </li>
   );
