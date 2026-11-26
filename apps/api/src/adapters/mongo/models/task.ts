@@ -6,7 +6,7 @@ const taskSchema = new Schema(
   {
     _id: String,
     workspaceId: { type: String, required: true },
-    projectId: { type: String, required: true },
+    projectId: { type: String, default: null },
     key: { type: String, required: true },
     title: { type: String, required: true },
     status: { type: String, required: true },
