@@ -36,6 +36,7 @@ const activitySchema = new Schema(
     taskId: { type: String, default: null },
     projectId: { type: String, default: null },
     detail: { type: String, default: '' },
+    via: { type: String, default: 'app' },
     at: { type: Number, index: true },
   },
   { versionKey: false },

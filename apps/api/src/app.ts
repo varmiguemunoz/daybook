@@ -4,6 +4,9 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Repositories } from './ports/repositories';
 import { AppError } from './http/errors';
+import { memoryHitCounter, rateLimit, type HitCounter } from './http/rate-limit';
+import { requestLogger, withRequestId } from './http/logging';
+import { log } from './shared/log';
 import { taskRoutes } from './modules/tasks/task-routes';
 import { workspaceRoutes } from './modules/workspace/workspace-routes';
 import { memberRoutes, type RemoveMembership } from './modules/members/member-routes';
@@ -18,6 +21,7 @@ import { activityRoutes } from './modules/activity/activity-routes';
 import { clerkWebhookRoutes } from './modules/webhooks/clerk-routes';
 import { folderRoutes } from './modules/folders/folder-routes';
 import { noteRoutes } from './modules/notes/note-routes';
+import { mcpRoutes, type McpRouteOptions } from './modules/mcp/mcp-routes';
 
 export interface AppDependencies {
   repositories: Repositories;
@@ -26,24 +30,15 @@ export interface AppDependencies {
   confirmMembership: ConfirmMembership;
   allowedOrigins: string[];
   webhookSigningSecret: string;
+  // Readiness of the backing services; load balancers send traffic only when it is true.
+  ready?: () => Promise<boolean>;
+  // Shared request counter for the rate limit; defaults to one kept in this process.
+  countHit?: HitCounter;
+  // MCP endpoint for AI assistants; left out in tests and when Clerk OAuth is not configured.
+  mcp?: McpRouteOptions;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
-const RATE_LIMIT = 300;
-const RATE_WINDOW_MS = 60_000;
-const rateBuckets = new Map<string, { count: number; reset: number }>();
-
-const rateLimit: MiddlewareHandler = async (context, next) => {
-  const key = context.get('identity').userId;
-  const now = Date.now();
-  const current = rateBuckets.get(key);
-  const bucket = current && now <= current.reset ? current : { count: 0, reset: now + RATE_WINDOW_MS };
-  bucket.count += 1;
-  rateBuckets.set(key, bucket);
-  if (bucket.count > RATE_LIMIT) throw new AppError(429, 'Too many requests');
-  await next();
-};
-
 function apiRoutes(repositories: Repositories, removeMembership: RemoveMembership): Hono {
   const api = new Hono();
   api.route('/tasks', taskRoutes(repositories));
@@ -65,23 +60,35 @@ function handleError(error: Error, context: Context) {
     return context.json({ error: { message: error.message, issues: error.issues, code: error.code } }, error.status);
   }
 
-  console.error('[api] unhandled error', error);
+  log('error', 'unhandled error', { requestId: context.get('requestId'), path: context.req.path, error: error.message, stack: error.stack });
   return context.json({ error: { message: 'Unexpected server error', issues: null } }, 500);
 }
 
-export function createApp({ repositories, authenticate, removeMembership, confirmMembership, allowedOrigins, webhookSigningSecret }: AppDependencies): Hono {
+export function createApp(dependencies: AppDependencies): Hono {
+  const {
+    repositories,
+    authenticate,
+    removeMembership,
+    confirmMembership,
+    allowedOrigins,
+    webhookSigningSecret,
+    ready,
+    countHit = memoryHitCounter(),
+  } = dependencies;
   const app = new Hono();
 
-  app.use('*', secureHeaders());
+  app.use('*', withRequestId, requestLogger, secureHeaders());
   app.get('/health', context => context.json({ status: 'ok', service: 'daybook-api' }));
+  app.get('/ready', async context => ((await (ready?.() ?? true)) ? context.json({ status: 'ready' }) : context.json({ status: 'unavailable' }, 503)));
   app.route('/webhooks/clerk', clerkWebhookRoutes(repositories, webhookSigningSecret, confirmMembership));
+  if (dependencies.mcp) app.route('/', mcpRoutes(dependencies.mcp));
 
-  app.use('/api/*', cors({ origin: allowedOrigins, allowHeaders: ['authorization', 'content-type'] }));
+  app.use('/api/*', cors({ origin: allowedOrigins, allowHeaders: ['authorization', 'content-type'], exposeHeaders: ['X-Request-Id'] }));
   app.use(
     '/api/*',
     bodyLimit({ maxSize: BODY_LIMIT_BYTES, onError: context => context.json({ error: { message: 'Request body is too large', issues: null } }, 413) }),
   );
-  app.use('/api/*', authenticate, rateLimit, scope(repositories, confirmMembership));
+  app.use('/api/*', authenticate, rateLimit(countHit), scope(repositories, confirmMembership));
   app.route('/api', apiRoutes(repositories, removeMembership));
 
   app.notFound(context => context.json({ error: { message: `No route for ${context.req.path}`, issues: null } }, 404));

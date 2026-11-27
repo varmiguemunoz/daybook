@@ -1,0 +1,23 @@
+# Dependencies and build output are rebuilt inside the image
+**/node_modules
+**/dist
+apps/web/src-tauri/target
+apps/web/src-tauri/gen
+
+# Secrets never enter an image; the platform injects them at runtime
+**/.env
+**/.env.*
+!**/.env.example
+
+# Repository and tooling noise
+.git
+.github
+.agents
+.claude
+.opencode
+.atl
+.impeccable
+apps/web/.impeccable
+docs
+**/*.log
+.DS_Store

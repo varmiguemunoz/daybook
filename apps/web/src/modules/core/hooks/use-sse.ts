@@ -10,6 +10,7 @@ const INVALIDATES: Record<string, string[]> = {
   'task.deleted': ['tasks'],
   'comment.created': ['comments'],
   'member.removed': ['members', 'teams', 'bootstrap'],
+  'member.updated': ['members', 'bootstrap'],
   'notification.created': ['notifications'],
   'note.created': ['notes'],
   'note.updated': ['notes', 'note'],

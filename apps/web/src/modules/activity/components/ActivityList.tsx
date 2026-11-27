@@ -24,7 +24,9 @@ export function ActivityEntry({ entry, actor, task, meId }: EntryProps) {
     <div className="fitem">
       <Avatar member={actor} className="sm" />
       <div className="grow">
-        <b>{actorName(actor, meId)}</b> <span className="muted">{entry.verb}</span> <span className="obj">{subjectOf(entry, task)}</span>
+        <b>{actorName(actor, meId)}</b>
+        {entry.via === 'mcp' && <span className="muted"> via AI assistant</span>} <span className="muted">{entry.verb}</span>{' '}
+        <span className="obj">{subjectOf(entry, task)}</span>
       </div>
       <time>{timeAgo(entry.at)}</time>
     </div>

@@ -1,6 +1,6 @@
-import type { Member, UpdateMemberInput } from '@daybook/domain';
+import type { Member, Role, UpdateMemberInput } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
-import { notFound } from '../../http/errors';
+import { AppError, notFound } from '../../http/errors';
 import { emit } from '../../shared/events/bus';
 
 export function listMembers(repositories: Repositories, workspaceId: string): Promise<Member[]> {
@@ -17,6 +17,14 @@ export async function updateMember(repositories: Repositories, workspaceId: stri
   const updated = await repositories.members.update(workspaceId, id, input);
   if (!updated) throw notFound('Member');
   return updated;
+}
+
+// A workspace always keeps at least one admin, and nobody removes or demotes themselves by accident.
+export async function assertAdminChange(repositories: Repositories, actor: Member, target: Member, nextRole: Role | null): Promise<void> {
+  if (target.id === actor.id) throw new AppError(400, nextRole ? 'You cannot change your own role' : 'You cannot remove yourself');
+  if (target.role !== 'admin' || nextRole === 'admin') return;
+  const admins = (await repositories.members.listByWorkspace(target.workspaceId)).filter(member => member.role === 'admin');
+  if (admins.length <= 1) throw new AppError(409, 'A workspace needs at least one admin');
 }
 
 export async function purgeMember(repositories: Repositories, workspaceId: string, id: string): Promise<void> {

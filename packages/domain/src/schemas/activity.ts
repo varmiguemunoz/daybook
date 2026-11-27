@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { idSchema, timestampSchema } from './primitives';
 
+// Where a change came from: the app itself or an AI assistant connected over MCP.
+export const ACTIVITY_SOURCES = ['app', 'mcp'] as const;
+
 export const ACTIVITY_VERBS = ['created', 'updated', 'completed', 'reopened', 'archived', 'commented', 'assigned', 'moved', 'deleted'] as const;
 
 export const activitySchema = z.object({
@@ -11,11 +14,13 @@ export const activitySchema = z.object({
   taskId: idSchema.nullable().default(null),
   projectId: idSchema.nullable().default(null),
   detail: z.string().max(200).default(''),
+  via: z.enum(ACTIVITY_SOURCES).default('app'),
   at: timestampSchema,
 });
 
 export type Activity = z.infer<typeof activitySchema>;
 export type ActivityVerb = (typeof ACTIVITY_VERBS)[number];
+export type ActivitySource = (typeof ACTIVITY_SOURCES)[number];
 
 export const NOTIFICATION_TYPES = ['mention', 'assign', 'comment', 'update'] as const;
 

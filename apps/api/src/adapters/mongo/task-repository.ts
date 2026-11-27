@@ -47,6 +47,10 @@ export class MongoTaskRepository {
     return toDomain<Task>(await TaskDocument.findOne({ _id: id, workspaceId }).lean());
   }
 
+  async count(workspaceId: string): Promise<number> {
+    return TaskDocument.countDocuments({ workspaceId });
+  }
+
   async create(task: Task): Promise<Task> {
     return toDomain<Task>(await TaskDocument.create({ _id: task.id, ...task })) as Task;
   }

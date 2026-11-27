@@ -78,6 +78,10 @@ export class MongoNoteRepository implements NoteRepository {
     return summaries({ workspaceId, $or: [{ linkIds: id }, { mentionIds: id }] });
   }
 
+  async count(workspaceId: string): Promise<number> {
+    return NoteDocument.countDocuments({ workspaceId });
+  }
+
   async create(note: Note): Promise<Note> {
     return toDomain<Note>(await NoteDocument.create({ _id: note.id, ...note })) as Note;
   }

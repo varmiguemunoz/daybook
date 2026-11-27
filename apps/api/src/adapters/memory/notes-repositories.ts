@@ -67,6 +67,10 @@ export class MemoryNoteRepository implements NoteRepository {
     return this.items.insert(note);
   }
 
+  async count(workspaceId: string): Promise<number> {
+    return this.items.filter({ workspaceId }).length;
+  }
+
   async update(workspaceId: string, id: string, patch: Partial<Note>): Promise<Note | null> {
     return this.items.patch(id, patch, { workspaceId });
   }

@@ -78,6 +78,10 @@ export class MemoryTaskRepository implements TaskRepository {
     return this.items.insert(task);
   }
 
+  async count(workspaceId: string): Promise<number> {
+    return this.items.filter({ workspaceId }).length;
+  }
+
   async update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null> {
     return this.items.patch(id, patch, { workspaceId });
   }

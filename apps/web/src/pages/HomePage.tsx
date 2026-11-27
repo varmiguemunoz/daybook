@@ -5,6 +5,7 @@ import { useTasks } from '../modules/tasks/services/queries';
 import { Skeleton } from '../modules/core/components/Skeleton';
 import { Modal } from '../modules/core/components/Modal';
 import { HomeHeader } from '../modules/home/components/HomeHeader';
+import { GetStarted } from '../modules/home/components/GetStarted';
 import { HomeStats } from '../modules/home/components/HomeStats';
 import { MyTasksPanel } from '../modules/home/components/MyTasksPanel';
 import { RecentActivityPanel } from '../modules/home/components/RecentActivityPanel';
@@ -28,6 +29,7 @@ export function HomePage() {
   return (
     <div className="page">
       <HomeHeader name={data.me.name} onInvite={() => setInviteOpen(true)} onNewTask={() => openComposer()} />
+      <GetStarted bootstrap={data} taskCount={tasks.length} onNewTask={() => openComposer()} onInvite={() => setInviteOpen(true)} />
       <HomeStats data={home} />
       <div className="grid2">
         <div className="stack">

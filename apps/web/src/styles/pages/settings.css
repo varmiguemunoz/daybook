@@ -155,3 +155,48 @@
   color: var(--text-2);
   font-size: var(--fs-xs);
 }
+
+/* Settings → AI assistants */
+.ai-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 6px 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+.ai-copy code {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  overflow-x: auto;
+  white-space: nowrap;
+  user-select: all;
+}
+.ai-steps .ai-copy {
+  margin: 8px 0 4px;
+}
+.ai-steps {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ai-steps li::marker {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.ai-note,
+.ai-body {
+  margin: 10px 0 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.ai-body {
+  font-size: var(--fs);
+  max-width: 36rem;
+}

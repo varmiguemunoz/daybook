@@ -10,6 +10,7 @@ import { NotePane } from '../modules/notes/components/NotePane';
 import { NotesSidebar } from '../modules/notes/components/NotesSidebar';
 import { useUnsavedGuard } from '../modules/notes/hooks/use-unsaved-guard';
 import { useCreateNote } from '../modules/notes/services/queries';
+import { failureMessage } from '../modules/core/services/api-client';
 
 function useNotesLocation() {
   const [params, setParams] = useSearchParams();
@@ -57,7 +58,7 @@ function useNewNote(guard: ReturnType<typeof useUnsavedGuard>, go: ReturnType<ty
             setFresh(note.id);
             go({ note: note.id, folder: note.folderId });
           },
-          onError: () => showToast('Could not create the note', 'error'),
+          onError: error => showToast(failureMessage(error, 'Could not create the note'), 'error'),
         },
       ),
     );

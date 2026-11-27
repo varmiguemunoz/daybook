@@ -1,5 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
+// Where AI assistants (Claude, ChatGPT, Codex) connect over MCP.
+export const MCP_URL = `${API_BASE.replace(/\/$/, '')}/mcp`;
+
 type TokenSource = () => Promise<string | null>;
 
 let tokenSource: TokenSource = async () => null;
@@ -18,6 +21,11 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+// A workspace limit explains itself; anything else gets the caller's generic message.
+export function failureMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError && error.code === 'limit_reached' ? error.message : fallback;
 }
 
 interface ErrorBody {

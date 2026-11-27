@@ -26,6 +26,7 @@ const GROUPS: Array<[string, Entry[]]> = [
     'Personal',
     [
       { key: 'profile', label: 'Profile', icon: 'user' },
+      { key: 'assistants', label: 'AI assistants', icon: 'plug' },
       { key: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' },
     ],
   ],

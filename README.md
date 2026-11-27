@@ -18,12 +18,14 @@ Tasks and notes for a small team, in one calm workspace. Open source under the M
 6. [Getting started](#getting-started)
 7. [Environment variables](#environment-variables)
 8. [Commands](#commands)
-9. [API reference](#api-reference)
-10. [Code conventions](#code-conventions)
-11. [Design system and AI skills](#design-system-and-ai-skills)
-12. [Contributing](#contributing)
-13. [Known limitations](#known-limitations)
-14. [License](#license)
+9. [Deployment](#deployment)
+10. [AI assistants (MCP)](#ai-assistants-mcp)
+11. [API reference](#api-reference)
+12. [Code conventions](#code-conventions)
+13. [Design system and AI skills](#design-system-and-ai-skills)
+14. [Contributing](#contributing)
+15. [Known limitations](#known-limitations)
+16. [License](#license)
 
 ### What Daybook does
 
@@ -105,13 +107,14 @@ daybook/
 │   │   ├── src/
 │   │   │   ├── adapters/
 │   │   │   │   ├── memory/       In-memory repositories (seeded demo data)
-│   │   │   │   └── mongo/        Mongoose models and repositories
+│   │   │   │   ├── mongo/        Mongoose models and repositories
+│   │   │   │   └── redis/        Shared event bus and rate-limit counter
 │   │   │   ├── fixtures/seed/    Demo workspace, members and tasks
-│   │   │   ├── http/             Auth, workspace scope, permissions, errors, validation
+│   │   │   ├── http/             Auth, workspace scope, rate limit, logging, errors, validation
 │   │   │   ├── modules/          One folder per feature: *-routes.ts + *-service.ts
 │   │   │   ├── ports/            Repository interfaces
 │   │   │   ├── scripts/seed.ts   Loads the demo data into MongoDB
-│   │   │   ├── shared/           Event bus and email
+│   │   │   ├── shared/           Event bus, email, quotas, JSON logger
 │   │   │   ├── app.ts            Middleware and route wiring
 │   │   │   ├── config.ts         Environment validation
 │   │   │   └── server.ts         Entry point
@@ -132,7 +135,9 @@ daybook/
 │   └── domain/                   Shared schemas, types, permissions, vocabularies
 ├── .claude/                      AI agent skills and sub-agents (see Design system and AI skills)
 ├── .agents/  .opencode/          The same skills for other agent tools
+├── deploy/Caddyfile              Edge proxy with automatic TLS for a VPS
 ├── docker-compose.yml            MongoDB 7 for local development
+├── docker-compose.prod.yml       Production stack for a VPS (edge, web, api replicas, Redis)
 ├── eslint.config.js  tsconfig.base.json  .prettierrc.json  .editorconfig
 ├── skills-lock.json              Pinned external skills
 └── .env.example                  MongoDB credentials for Docker Compose
@@ -157,6 +162,7 @@ daybook/
 | `search`        | `⌘K` search across tasks, members, teams and notes                               |
 | `realtime`      | Server-Sent Events stream per workspace                                          |
 | `webhooks`      | Clerk webhooks for organizations, memberships and users                          |
+| `mcp`           | MCP server for AI assistants: OAuth with Clerk, 39 tools, one per-request server |
 
 **Web (`apps/web/src/modules`)**
 
@@ -176,7 +182,7 @@ daybook/
 | `notifications` | Notification list and unread badge                                     |
 | `activity`      | Activity feed                                                          |
 | `search`        | Command palette                                                        |
-| `settings`      | Workspace, appearance, profile and shortcuts                           |
+| `settings`      | Workspace, appearance, profile, AI assistants and shortcuts            |
 
 ### Getting started
 
@@ -256,21 +262,27 @@ The API must allow the Tauri origins (`tauri://localhost`, `http://tauri.localho
 
 **API `apps/api/.env`**
 
-| Variable                       | Required     | Default                             | Description                                                         |
-| ------------------------------ | ------------ | ----------------------------------- | ------------------------------------------------------------------- |
-| `PORT`                         | No           | `3001`                              | API port                                                            |
-| `PERSISTENCE`                  | No           | `memory`                            | `memory` or `mongo`                                                 |
-| `MONGODB_URI`                  | With `mongo` | `mongodb://127.0.0.1:27017/daybook` | MongoDB connection string; the example matches Docker Compose       |
-| `CLERK_SECRET_KEY`             | Yes          | –                                   | Clerk secret key, starts with `sk_`                                 |
-| `CLERK_PUBLISHABLE_KEY`        | Yes          | –                                   | Clerk publishable key, starts with `pk_`                            |
-| `CLERK_WEBHOOK_SIGNING_SECRET` | Yes          | –                                   | Clerk webhook signing secret, starts with `whsec_`                  |
-| `ALLOWED_ORIGINS`              | Yes          | –                                   | Comma-separated origins allowed to call the API (web app and Tauri) |
-| `SMTP_HOST`                    | No           | –                                   | SMTP server for email notifications                                 |
-| `SMTP_PORT`                    | No           | `587`                               | SMTP port                                                           |
-| `SMTP_SECURE`                  | No           | `false`                             | `true` for implicit TLS (port 465)                                  |
-| `SMTP_USER`                    | No           | –                                   | SMTP user                                                           |
-| `SMTP_PASS`                    | No           | –                                   | SMTP password                                                       |
-| `SMTP_FROM`                    | No           | `SMTP_USER`                         | Sender address                                                      |
+| Variable                       | Required     | Default                             | Description                                                           |
+| ------------------------------ | ------------ | ----------------------------------- | --------------------------------------------------------------------- |
+| `NODE_ENV`                     | No           | `development`                       | `production` in production; refuses `PERSISTENCE=memory`              |
+| `PORT`                         | No           | `3001`                              | API port                                                              |
+| `PERSISTENCE`                  | No           | `memory`                            | `memory` or `mongo`                                                   |
+| `MONGODB_URI`                  | With `mongo` | `mongodb://127.0.0.1:27017/daybook` | MongoDB connection string; the example matches Docker Compose         |
+| `CLERK_SECRET_KEY`             | Yes          | –                                   | Clerk secret key, starts with `sk_`                                   |
+| `CLERK_PUBLISHABLE_KEY`        | Yes          | –                                   | Clerk publishable key, starts with `pk_`                              |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | Yes          | –                                   | Clerk webhook signing secret, starts with `whsec_`                    |
+| `ALLOWED_ORIGINS`              | Yes          | –                                   | Comma-separated origins allowed to call the API (web app and Tauri)   |
+| `SMTP_HOST`                    | No           | –                                   | SMTP server for email notifications                                   |
+| `SMTP_PORT`                    | No           | `587`                               | SMTP port                                                             |
+| `SMTP_SECURE`                  | No           | `false`                             | `true` for implicit TLS (port 465)                                    |
+| `SMTP_USER`                    | No           | –                                   | SMTP user                                                             |
+| `SMTP_PASS`                    | No           | –                                   | SMTP password                                                         |
+| `SMTP_FROM`                    | No           | `SMTP_USER`                         | Sender address                                                        |
+| `PUBLIC_API_URL`               | No           | `http://localhost:PORT`             | Public URL of the API; AI assistants connect to `PUBLIC_API_URL/mcp`  |
+| `APP_URL`                      | No           | –                                   | Public URL of the web app; invitations sent by an assistant land here |
+| `REDIS_URL`                    | No           | –                                   | Redis for several API instances (`redis://` or `rediss://`)           |
+| `MAX_TASKS_PER_WORKSPACE`      | No           | `0`                                 | Task limit per workspace; `0` means no limit                          |
+| `MAX_NOTES_PER_WORKSPACE`      | No           | `0`                                 | Note limit per workspace; `0` means no limit                          |
 
 Set `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS` together, or leave all three empty to send in-app notifications only. The API validates everything at boot and refuses to start with a clear error when something is missing.
 
@@ -303,36 +315,148 @@ Run from the repository root.
 | `npm run tauri:dev -w @daybook/web`       | Desktop app in development                                              |
 | `npm run tauri:build -w @daybook/web`     | Desktop installers                                                      |
 
+### Deployment
+
+The hosted service runs at **https://app.sprintos.run** (web) and **https://api.sprintos.run** (API). Each app has a Dockerfile; build both from the repository root.
+
+| Image | Dockerfile            | Runs                   | Notes                                                                                                   |
+| ----- | --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| api   | `apps/api/Dockerfile` | Node on `PORT` (3001)  | esbuild bundle, non-root user, healthcheck on `/health`, readiness on `/ready`, graceful `SIGTERM`      |
+| web   | `apps/web/Dockerfile` | Caddy on `PORT` (8080) | Static build with SPA fallback; `VITE_API_URL` and `VITE_CLERK_PUBLISHABLE_KEY` are **build arguments** |
+
+```bash
+docker build -f apps/api/Dockerfile -t daybook-api .
+docker build -f apps/web/Dockerfile -t daybook-web \
+  --build-arg VITE_API_URL=https://api.sprintos.run \
+  --build-arg VITE_CLERK_PUBLISHABLE_KEY=pk_live_... .
+```
+
+Production rules:
+
+- `NODE_ENV=production` and `PERSISTENCE=mongo`. The API refuses to start with the memory store in production.
+- `ALLOWED_ORIGINS` includes `https://app.sprintos.run` (plus the Tauri origins for the desktop app).
+- `PUBLIC_API_URL=https://api.sprintos.run` and `APP_URL=https://app.sprintos.run`, so AI assistants and invitations use the public addresses.
+- Use the keys of your Clerk **production** instance.
+- Vite writes `VITE_*` values into the bundle, so changing them needs a new build.
+- `.env` files never enter an image (`.dockerignore`); the platform injects the variables at runtime.
+
+**Railway**
+
+1. In one project, next to your MongoDB service, add two services from this GitHub repository: `api` and `web`.
+2. In each service's **Variables**, set `RAILWAY_DOCKERFILE_PATH` (`apps/api/Dockerfile` or `apps/web/Dockerfile`) and the variables from [Environment variables](#environment-variables). The web Dockerfile declares `VITE_*` with `ARG`, which is how Railway passes them to the build.
+3. Point `MONGODB_URI` at your database with a reference variable, for example `${{MongoDB.MONGO_URL}}` (use your service's name).
+4. In the `api` settings, set the healthcheck path to `/ready`.
+5. Set watch paths so each service only rebuilds when it changes: `api` → `/apps/api/**`, `/packages/domain/**`, `/package-lock.json`; `web` → `/apps/web/**`, `/packages/domain/**`, `/package-lock.json`.
+6. Add the custom domains `app.sprintos.run` (web) and `api.sprintos.run` (api) and create the DNS records Railway shows.
+7. For more than one `api` replica, add a Redis service, set `REDIS_URL=${{Redis.REDIS_URL}}` on `api` and raise **Replicas** in its settings. Without `REDIS_URL`, keep one replica.
+
+**VPS with Docker Compose**
+
+1. Point the DNS `A` records of `app.sprintos.run` and `api.sprintos.run` at the server.
+2. Clone the repository and create `apps/api/.env` and `apps/web/.env` with production values.
+3. Start everything:
+
+   ```bash
+   docker compose -f docker-compose.prod.yml --env-file apps/web/.env up -d --build
+   ```
+
+4. The stack runs the edge proxy, the web app, two `api` replicas and Redis. The edge proxy (`deploy/Caddyfile`) gets TLS certificates on its own, spreads requests over the replicas and streams Server-Sent Events without buffering. Set `API_REPLICAS` in `apps/web/.env` to run a different number of replicas.
+5. To update, `git pull` and run the same command. The replicas restart, close their open streams and the browsers reconnect within a few seconds.
+
+**Several API instances**
+
+- With `REDIS_URL` set, the instances share real-time events and the rate limit (300 requests per minute per user) through Redis. Redis only holds short-lived data, so it needs no persistence or backup.
+- Without `REDIS_URL` the API runs as one instance and keeps both in memory.
+- `/ready` answers 503 while MongoDB or Redis is unreachable and while the instance shuts down, so the platform stops sending it traffic. If Redis goes down, requests keep working, but real-time updates pause until it returns.
+
+**Logs**
+
+The API writes one JSON object per line (`time`, `level`, `msg`, `requestId`, `method`, `path`, `status`, `durationMs`, `userId`, `workspaceId`). Every response carries an `X-Request-Id` header with the same id, so a user's report can be matched to its log line.
+
+**Limits for a hosted instance**
+
+- `MAX_TASKS_PER_WORKSPACE` and `MAX_NOTES_PER_WORKSPACE` cap what one workspace can create. Past the limit, the API answers 403 with the code `limit_reached`, and the app shows the message.
+- Clerk's free plan includes 100 monthly retained organizations per app (single-member organizations are free) and up to 20 members per organization. Check your Clerk plan before inviting larger teams.
+
+**Backups**
+
+MongoDB holds all the data. Turn on your provider's backups (Railway volume backups or MongoDB Atlas snapshots), or run `mongodump --uri "$MONGODB_URI" --archive=daybook-$(date +%F).gz --gzip` on a schedule and keep the files off the server. Test a restore with `mongorestore --archive=<file> --gzip`.
+
+**Clerk in production**
+
+1. Create the production instance for `sprintos.run` and add the DNS records Clerk asks for.
+2. Turn on Organizations, let users create their own (capped at a few per user, for example 3) and add the same session token claims as in development (`name`, `email`, `org_name`).
+3. Create the webhook at `https://api.sprintos.run/webhooks/clerk` with the same events.
+4. Put the production keys in the API variables and in the web build arguments.
+5. Add the MCP server and turn on dynamic client registration, as described in [AI assistants (MCP)](#ai-assistants-mcp).
+
+**Desktop app**: build the installers with `VITE_API_URL=https://api.sprintos.run` so they talk to the hosted API.
+
+### AI assistants (MCP)
+
+The API includes an MCP server at `/mcp` (`https://api.sprintos.run/mcp` in the hosted service). Claude, ChatGPT and Codex connect to it with OAuth through Clerk and act as the signed-in user, with the same workspaces and role as in the app. Each person finds the connection steps in **Settings → AI assistants**.
+
+| Area                      | Tools                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Workspace                 | `list_workspaces`, `get_workspace_overview`, `search`, `get_activity`                                           |
+| Tasks                     | `list_tasks`, `get_task`, `create_task`, `update_task`, `bulk_update_tasks`, `delete_task`, `bulk_delete_tasks` |
+| Comments                  | `list_comments`, `add_comment`, `edit_comment`, `react_to_comment`, `delete_comment`                            |
+| Notes                     | `list_notes`, `get_note`, `create_note`, `update_note`, `set_note_links`, `delete_note`                         |
+| Folders                   | `list_folders`, `create_folder`, `update_folder`, `delete_folder`                                               |
+| Members (admin to change) | `list_members`, `invite_member`, `update_member_role`, `remove_member`                                          |
+| Teams (admin to change)   | `list_teams`, `create_team`, `update_team`, `add_team_member`, `remove_team_member`, `delete_team`              |
+| Notifications             | `list_notifications`, `mark_notification_read`, `mark_all_notifications_read`                                   |
+
+Each note is also a resource at `daybook://<workspace>/notes/<id>` in Markdown.
+
+**Set up Clerk once per instance**
+
+1. In the Clerk Dashboard, open **Agents → MCP servers**, select **Add MCP server** and enter the exact endpoint: `https://api.sprintos.run/mcp` in production, `http://localhost:3001/mcp` in development. This turns on the audience claim the API checks.
+2. In **OAuth applications**, turn on **Dynamic client registration** (Claude and Codex register themselves) and set default scopes for clients that send none.
+3. Set `PUBLIC_API_URL` (and `APP_URL`) on the API so the advertised URL matches the one in Clerk.
+
+**How it works**
+
+- Stateless Streamable HTTP (`@modelcontextprotocol/server` v2): every request gets a fresh server, so any replica can answer. Clients on the 2025 protocol revisions are served too.
+- Without a valid token, `/mcp` answers 401 with `WWW-Authenticate` pointing to `/.well-known/oauth-protected-resource/mcp`, which names Clerk as the authorization server. That starts the sign-in in each client.
+- Tokens are verified with Clerk (`acceptsToken: 'oauth_token'`, audience = the MCP URL). The token names a user; the tool picks the workspace from the `workspace` argument (Clerk organization id, workspace id or name) and checks membership with Clerk on each request.
+- Tools call the same services as the REST API, so permissions, quotas, notifications and real-time updates behave the same. Activity records changes as **via AI assistant**, and the rate limit is shared with the REST API.
+
+**Try it locally**: run the API, then `npx @modelcontextprotocol/inspector` and connect to `http://localhost:3001/mcp`. Claude and ChatGPT connect from their own servers, so they need a public HTTPS URL.
+
 ### API reference
 
 All `/api` routes need `Authorization: Bearer <Clerk session token>` with an active organization. Errors use `{ "error": { "message", "issues", "code" } }`. Routes marked **admin** need the `admin` role; routes that change notes need `note:write`, which both roles have.
 
-| Method and path                                                           | Purpose                                                           |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `GET /health`                                                             | Health check (no auth)                                            |
-| `POST /webhooks/clerk`                                                    | Clerk webhooks (signature verified)                               |
-| `GET /api/bootstrap`                                                      | Workspace, current member, members, activity                      |
-| `GET /api/tasks` · `POST /api/tasks`                                      | List (with filters) and create tasks                              |
-| `GET/PATCH/DELETE /api/tasks/:id`                                         | Read, update, delete a task                                       |
-| `PATCH /api/tasks` · `DELETE /api/tasks`                                  | Bulk update and bulk delete                                       |
-| `GET/POST /api/comments/tasks/:taskId`                                    | Comments of a task                                                |
-| `PATCH/DELETE /api/comments/:id`                                          | Edit or delete your comment                                       |
-| `POST /api/comments/:id/reactions`                                        | Toggle an emoji reaction                                          |
-| `GET /api/members` · `GET /api/members/:id`                               | Members                                                           |
-| `PATCH/DELETE /api/members/:id`                                           | Update or remove a member (admin)                                 |
-| `GET/POST /api/teams` · `GET/PATCH/DELETE /api/teams/:id`                 | Teams (changes: admin)                                            |
-| `POST /api/teams/:id/members` · `DELETE /api/teams/:id/members/:memberId` | Team membership (admin)                                           |
-| `GET /api/folders` · `POST /api/folders`                                  | Note folders                                                      |
-| `PATCH/DELETE /api/folders/:id`                                           | Rename or move, delete a folder                                   |
-| `GET /api/notes?folderId=&q=`                                             | Note summaries; empty `folderId` = loose notes                    |
-| `GET /api/notes/:id`                                                      | `{ note, related, backlinks }`                                    |
-| `POST /api/notes` · `PATCH /api/notes/:id`                                | Create and update; send `baseUpdatedAt` to get a 409 on conflicts |
-| `PUT /api/notes/:id/links` · `DELETE /api/notes/:id`                      | Set explicit links, delete a note                                 |
-| `GET /api/notifications`                                                  | Your notifications                                                |
-| `PATCH /api/notifications/:id/read` · `POST /api/notifications/read-all`  | Mark as read                                                      |
-| `GET /api/activity`                                                       | Activity feed                                                     |
-| `GET /api/search?q=`                                                      | Search                                                            |
-| `GET /api/events/stream`                                                  | Server-Sent Events for the workspace                              |
+| Method and path                                                           | Purpose                                                               |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `GET /health`                                                             | Liveness check (no auth)                                              |
+| `GET /ready`                                                              | Readiness: 200 when MongoDB and Redis answer, 503 otherwise (no auth) |
+| `POST /webhooks/clerk`                                                    | Clerk webhooks (signature verified)                                   |
+| `POST /mcp`                                                               | MCP server (Streamable HTTP); needs a Clerk OAuth access token        |
+| `GET /.well-known/oauth-protected-resource/mcp`                           | OAuth discovery for MCP clients (RFC 9728)                            |
+| `GET /api/bootstrap`                                                      | Workspace, current member, members, activity                          |
+| `GET /api/tasks` · `POST /api/tasks`                                      | List (with filters) and create tasks                                  |
+| `GET/PATCH/DELETE /api/tasks/:id`                                         | Read, update, delete a task                                           |
+| `PATCH /api/tasks` · `DELETE /api/tasks`                                  | Bulk update and bulk delete                                           |
+| `GET/POST /api/comments/tasks/:taskId`                                    | Comments of a task                                                    |
+| `PATCH/DELETE /api/comments/:id`                                          | Edit or delete your comment                                           |
+| `POST /api/comments/:id/reactions`                                        | Toggle an emoji reaction                                              |
+| `GET /api/members` · `GET /api/members/:id`                               | Members                                                               |
+| `PATCH/DELETE /api/members/:id`                                           | Update or remove a member (admin)                                     |
+| `GET/POST /api/teams` · `GET/PATCH/DELETE /api/teams/:id`                 | Teams (changes: admin)                                                |
+| `POST /api/teams/:id/members` · `DELETE /api/teams/:id/members/:memberId` | Team membership (admin)                                               |
+| `GET /api/folders` · `POST /api/folders`                                  | Note folders                                                          |
+| `PATCH/DELETE /api/folders/:id`                                           | Rename or move, delete a folder                                       |
+| `GET /api/notes?folderId=&q=`                                             | Note summaries; empty `folderId` = loose notes                        |
+| `GET /api/notes/:id`                                                      | `{ note, related, backlinks }`                                        |
+| `POST /api/notes` · `PATCH /api/notes/:id`                                | Create and update; send `baseUpdatedAt` to get a 409 on conflicts     |
+| `PUT /api/notes/:id/links` · `DELETE /api/notes/:id`                      | Set explicit links, delete a note                                     |
+| `GET /api/notifications`                                                  | Your notifications                                                    |
+| `PATCH /api/notifications/:id/read` · `POST /api/notifications/read-all`  | Mark as read                                                          |
+| `GET /api/activity`                                                       | Activity feed                                                         |
+| `GET /api/search?q=`                                                      | Search                                                                |
+| `GET /api/events/stream`                                                  | Server-Sent Events for the workspace                                  |
 
 ### Code conventions
 
@@ -381,7 +505,8 @@ Claude Code, OpenCode and other tools that read `.claude/` or `.agents/` pick th
 
 ### Known limitations
 
-- The event bus and the rate limiter live in the API process, so real-time updates and rate limits assume a single API instance. Running several instances needs a shared bus (for example Redis).
+- While Redis is unreachable, events published in that time are not delivered; open pages catch up on their next refresh.
+- AI assistants connect only with OAuth for now; personal API keys for scripts are not available yet.
 - `PERSISTENCE=memory` loses everything on restart. Use MongoDB for anything you want to keep.
 - `[[Title]]` links match note titles, so renaming a note breaks links that used its old title.
 - Dragging in the notes tree needs a pointer; keyboard users move items with the **Move to…** menus.
@@ -405,12 +530,14 @@ Daybook is released under the [MIT License](LICENSE). By contributing, you agree
 6. [Primeros pasos](#primeros-pasos)
 7. [Variables de entorno](#variables-de-entorno)
 8. [Comandos](#comandos)
-9. [Referencia de la API](#referencia-de-la-api)
-10. [Convenciones de código](#convenciones-de-código)
-11. [Sistema de diseño y skills de IA](#sistema-de-diseño-y-skills-de-ia)
-12. [Cómo contribuir](#cómo-contribuir)
-13. [Limitaciones conocidas](#limitaciones-conocidas)
-14. [Licencia](#licencia)
+9. [Despliegue](#despliegue)
+10. [Asistentes de IA (MCP)](#asistentes-de-ia-mcp)
+11. [Referencia de la API](#referencia-de-la-api)
+12. [Convenciones de código](#convenciones-de-código)
+13. [Sistema de diseño y skills de IA](#sistema-de-diseño-y-skills-de-ia)
+14. [Cómo contribuir](#cómo-contribuir)
+15. [Limitaciones conocidas](#limitaciones-conocidas)
+16. [Licencia](#licencia)
 
 ### Qué hace Daybook
 
@@ -484,13 +611,14 @@ daybook/
 │   │   ├── src/
 │   │   │   ├── adapters/
 │   │   │   │   ├── memory/       Repositorios en memoria (datos de demo)
-│   │   │   │   └── mongo/        Modelos y repositorios de Mongoose
+│   │   │   │   ├── mongo/        Modelos y repositorios de Mongoose
+│   │   │   │   └── redis/        Bus de eventos compartido y contador del límite
 │   │   │   ├── fixtures/seed/    Espacio, miembros y tareas de demo
-│   │   │   ├── http/             Auth, alcance del espacio, permisos, errores, validación
+│   │   │   ├── http/             Auth, alcance del espacio, límite, logs, errores, validación
 │   │   │   ├── modules/          Una carpeta por funcionalidad: *-routes.ts + *-service.ts
 │   │   │   ├── ports/            Interfaces de repositorios
 │   │   │   ├── scripts/seed.ts   Carga los datos de demo en MongoDB
-│   │   │   ├── shared/           Bus de eventos y correo
+│   │   │   ├── shared/           Bus de eventos, correo, límites, logger JSON
 │   │   │   ├── app.ts            Middleware y rutas
 │   │   │   ├── config.ts         Validación del entorno
 │   │   │   └── server.ts         Punto de entrada
@@ -511,7 +639,9 @@ daybook/
 │   └── domain/                   Esquemas, tipos, permisos y vocabularios compartidos
 ├── .claude/                      Skills y subagentes de IA (ver Sistema de diseño y skills de IA)
 ├── .agents/  .opencode/          Las mismas skills para otras herramientas de agentes
+├── deploy/Caddyfile              Proxy de borde con TLS automático para un VPS
 ├── docker-compose.yml            MongoDB 7 para desarrollo local
+├── docker-compose.prod.yml       Stack de producción para un VPS (borde, web, réplicas de api, Redis)
 ├── eslint.config.js  tsconfig.base.json  .prettierrc.json  .editorconfig
 ├── skills-lock.json              Skills externas fijadas a una versión
 └── .env.example                  Credenciales de MongoDB para Docker Compose
@@ -536,6 +666,7 @@ daybook/
 | `search`        | Búsqueda `⌘K` en tareas, miembros, equipos y notas                                  |
 | `realtime`      | Flujo de Server-Sent Events por espacio                                             |
 | `webhooks`      | Webhooks de Clerk para organizaciones, membresías y usuarios                        |
+| `mcp`           | Servidor MCP para asistentes de IA: OAuth con Clerk, 39 herramientas                |
 
 **Web (`apps/web/src/modules`)**
 
@@ -555,7 +686,7 @@ daybook/
 | `notifications` | Lista de notificaciones y contador de no leídas                                       |
 | `activity`      | Registro de actividad                                                                 |
 | `search`        | Paleta de comandos                                                                    |
-| `settings`      | Espacio, apariencia, perfil y atajos                                                  |
+| `settings`      | Espacio, apariencia, perfil, asistentes de IA y atajos                                |
 
 ### Primeros pasos
 
@@ -635,21 +766,27 @@ La API debe permitir los orígenes de Tauri (`tauri://localhost`, `http://tauri.
 
 **API `apps/api/.env`**
 
-| Variable                       | Obligatoria | Por defecto                         | Descripción                                                    |
-| ------------------------------ | ----------- | ----------------------------------- | -------------------------------------------------------------- |
-| `PORT`                         | No          | `3001`                              | Puerto de la API                                               |
-| `PERSISTENCE`                  | No          | `memory`                            | `memory` o `mongo`                                             |
-| `MONGODB_URI`                  | Con `mongo` | `mongodb://127.0.0.1:27017/daybook` | Cadena de conexión; la del ejemplo coincide con Docker Compose |
-| `CLERK_SECRET_KEY`             | Sí          | –                                   | Secret key de Clerk, empieza por `sk_`                         |
-| `CLERK_PUBLISHABLE_KEY`        | Sí          | –                                   | Publishable key de Clerk, empieza por `pk_`                    |
-| `CLERK_WEBHOOK_SIGNING_SECRET` | Sí          | –                                   | Signing secret del webhook de Clerk, empieza por `whsec_`      |
-| `ALLOWED_ORIGINS`              | Sí          | –                                   | Orígenes permitidos separados por comas (app web y Tauri)      |
-| `SMTP_HOST`                    | No          | –                                   | Servidor SMTP para notificaciones por correo                   |
-| `SMTP_PORT`                    | No          | `587`                               | Puerto SMTP                                                    |
-| `SMTP_SECURE`                  | No          | `false`                             | `true` para TLS implícito (puerto 465)                         |
-| `SMTP_USER`                    | No          | –                                   | Usuario SMTP                                                   |
-| `SMTP_PASS`                    | No          | –                                   | Contraseña SMTP                                                |
-| `SMTP_FROM`                    | No          | `SMTP_USER`                         | Remitente                                                      |
+| Variable                       | Obligatoria | Por defecto                         | Descripción                                                                    |
+| ------------------------------ | ----------- | ----------------------------------- | ------------------------------------------------------------------------------ |
+| `NODE_ENV`                     | No          | `development`                       | `production` en producción; rechaza `PERSISTENCE=memory`                       |
+| `PORT`                         | No          | `3001`                              | Puerto de la API                                                               |
+| `PERSISTENCE`                  | No          | `memory`                            | `memory` o `mongo`                                                             |
+| `MONGODB_URI`                  | Con `mongo` | `mongodb://127.0.0.1:27017/daybook` | Cadena de conexión; la del ejemplo coincide con Docker Compose                 |
+| `CLERK_SECRET_KEY`             | Sí          | –                                   | Secret key de Clerk, empieza por `sk_`                                         |
+| `CLERK_PUBLISHABLE_KEY`        | Sí          | –                                   | Publishable key de Clerk, empieza por `pk_`                                    |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | Sí          | –                                   | Signing secret del webhook de Clerk, empieza por `whsec_`                      |
+| `ALLOWED_ORIGINS`              | Sí          | –                                   | Orígenes permitidos separados por comas (app web y Tauri)                      |
+| `SMTP_HOST`                    | No          | –                                   | Servidor SMTP para notificaciones por correo                                   |
+| `SMTP_PORT`                    | No          | `587`                               | Puerto SMTP                                                                    |
+| `SMTP_SECURE`                  | No          | `false`                             | `true` para TLS implícito (puerto 465)                                         |
+| `SMTP_USER`                    | No          | –                                   | Usuario SMTP                                                                   |
+| `SMTP_PASS`                    | No          | –                                   | Contraseña SMTP                                                                |
+| `SMTP_FROM`                    | No          | `SMTP_USER`                         | Remitente                                                                      |
+| `PUBLIC_API_URL`               | No          | `http://localhost:PORT`             | URL pública de la API; los asistentes de IA se conectan a `PUBLIC_API_URL/mcp` |
+| `APP_URL`                      | No          | –                                   | URL pública de la web; ahí llegan las invitaciones que envía un asistente      |
+| `REDIS_URL`                    | No          | –                                   | Redis para varias instancias de la API (`redis://` o `rediss://`)              |
+| `MAX_TASKS_PER_WORKSPACE`      | No          | `0`                                 | Límite de tareas por espacio; `0` es sin límite                                |
+| `MAX_NOTES_PER_WORKSPACE`      | No          | `0`                                 | Límite de notas por espacio; `0` es sin límite                                 |
 
 Define `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS` juntos, o deja los tres vacíos para enviar solo notificaciones en la app. La API valida todo al arrancar y no inicia si falta algo, con un error claro.
 
@@ -681,6 +818,97 @@ Desde la raíz del repositorio.
 | `npm run seed -w @daybook/api`            | Cargar el espacio de demo en MongoDB                                 |
 | `npm run tauri:dev -w @daybook/web`       | App de escritorio en desarrollo                                      |
 | `npm run tauri:build -w @daybook/web`     | Instaladores de escritorio                                           |
+
+### Despliegue
+
+El servicio alojado corre en **https://app.sprintos.run** (web) y **https://api.sprintos.run** (API). Cada app tiene su Dockerfile; ambos se construyen desde la raíz del repositorio.
+
+| Imagen | Dockerfile            | Ejecuta                | Notas                                                                                                                        |
+| ------ | --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| api    | `apps/api/Dockerfile` | Node en `PORT` (3001)  | Bundle con esbuild, usuario sin privilegios, healthcheck en `/health`, readiness en `/ready`, apagado ordenado con `SIGTERM` |
+| web    | `apps/web/Dockerfile` | Caddy en `PORT` (8080) | Build estático que envía cualquier ruta a la app; `VITE_API_URL` y `VITE_CLERK_PUBLISHABLE_KEY` son **argumentos de build**  |
+
+Los comandos de `docker build` son los de la [sección en inglés](#deployment).
+
+Reglas de producción:
+
+- `NODE_ENV=production` y `PERSISTENCE=mongo`. La API no arranca con el almacén en memoria en producción.
+- `ALLOWED_ORIGINS` incluye `https://app.sprintos.run` (más los orígenes de Tauri para la app de escritorio).
+- `PUBLIC_API_URL=https://api.sprintos.run` y `APP_URL=https://app.sprintos.run`, para que los asistentes de IA y las invitaciones usen las direcciones públicas.
+- Usa las claves de la instancia de **producción** de Clerk.
+- Vite escribe los valores `VITE_*` en el bundle, así que cambiarlos exige un build nuevo.
+- Los `.env` nunca entran en una imagen (`.dockerignore`); la plataforma inyecta las variables al arrancar.
+
+**Railway**
+
+1. En un proyecto, junto a tu servicio de MongoDB, añade dos servicios desde este repositorio de GitHub: `api` y `web`.
+2. En **Variables** de cada servicio, define `RAILWAY_DOCKERFILE_PATH` (`apps/api/Dockerfile` o `apps/web/Dockerfile`) y las variables de [Variables de entorno](#variables-de-entorno). El Dockerfile de la web declara `VITE_*` con `ARG`, que es como Railway se las pasa al build.
+3. Apunta `MONGODB_URI` a tu base de datos con una variable de referencia, por ejemplo `${{MongoDB.MONGO_URL}}` (con el nombre de tu servicio).
+4. En los ajustes de `api`, pon `/ready` como ruta del healthcheck.
+5. Define las watch paths para que cada servicio solo se reconstruya cuando cambia: `api` → `/apps/api/**`, `/packages/domain/**`, `/package-lock.json`; `web` → `/apps/web/**`, `/packages/domain/**`, `/package-lock.json`.
+6. Añade los dominios `app.sprintos.run` (web) y `api.sprintos.run` (api) y crea los registros DNS que indica Railway.
+7. Para más de una réplica de `api`, añade un servicio de Redis, define `REDIS_URL=${{Redis.REDIS_URL}}` en `api` y sube **Replicas** en sus ajustes. Sin `REDIS_URL`, deja una réplica.
+
+**VPS con Docker Compose**
+
+1. Apunta los registros DNS `A` de `app.sprintos.run` y `api.sprintos.run` al servidor.
+2. Clona el repositorio y crea `apps/api/.env` y `apps/web/.env` con valores de producción.
+3. Arranca todo:
+
+   ```bash
+   docker compose -f docker-compose.prod.yml --env-file apps/web/.env up -d --build
+   ```
+
+4. El stack levanta el proxy de borde, la web, dos réplicas de `api` y Redis. El proxy de borde (`deploy/Caddyfile`) obtiene los certificados TLS solo, reparte las peticiones entre las réplicas y transmite los Server-Sent Events sin buffer. Define `API_REPLICAS` en `apps/web/.env` para usar otro número de réplicas.
+5. Para actualizar, haz `git pull` y repite el comando. Las réplicas se reinician, cierran sus streams abiertos y los navegadores se reconectan en pocos segundos.
+
+**Varias instancias de la API**
+
+- Con `REDIS_URL`, las instancias comparten por Redis los eventos en tiempo real y el límite de peticiones (300 por minuto por usuario). Redis solo guarda datos de vida corta, así que no necesita persistencia ni copias.
+- Sin `REDIS_URL`, la API corre como una sola instancia y guarda ambos en memoria.
+- `/ready` responde 503 mientras MongoDB o Redis no responden y mientras la instancia se apaga, así la plataforma deja de enviarle tráfico. Si Redis cae, las peticiones siguen funcionando, pero el tiempo real se pausa hasta que vuelve.
+
+**Logs**
+
+La API escribe un objeto JSON por línea (`time`, `level`, `msg`, `requestId`, `method`, `path`, `status`, `durationMs`, `userId`, `workspaceId`). Cada respuesta lleva la cabecera `X-Request-Id` con el mismo id, para cruzar el reporte de un usuario con su línea de log.
+
+**Límites para una instancia alojada**
+
+- `MAX_TASKS_PER_WORKSPACE` y `MAX_NOTES_PER_WORKSPACE` limitan lo que puede crear un espacio. Al pasar el límite, la API responde 403 con el código `limit_reached` y la app muestra el mensaje.
+- El plan gratuito de Clerk incluye 100 organizaciones retenidas al mes por app (las de un solo miembro son gratis) y hasta 20 miembros por organización. Revisa tu plan de Clerk antes de invitar equipos más grandes.
+
+**Copias de seguridad**
+
+MongoDB guarda todos los datos. Activa las copias de tu proveedor (backups de volumen en Railway o snapshots de MongoDB Atlas), o programa `mongodump --uri "$MONGODB_URI" --archive=daybook-$(date +%F).gz --gzip` y guarda los archivos fuera del servidor. Prueba la restauración con `mongorestore --archive=<archivo> --gzip`.
+
+**Clerk en producción**
+
+1. Crea la instancia de producción para `sprintos.run` y añade los registros DNS que pide Clerk.
+2. Activa Organizations, permite que los usuarios creen las suyas (con un tope por usuario, por ejemplo 3) y añade los mismos claims del token de sesión que en desarrollo (`name`, `email`, `org_name`).
+3. Crea el webhook en `https://api.sprintos.run/webhooks/clerk` con los mismos eventos.
+4. Pon las claves de producción en las variables de la API y en los argumentos de build de la web.
+5. Añade el servidor MCP y activa el registro dinámico de clientes, como se explica en [Asistentes de IA (MCP)](#asistentes-de-ia-mcp).
+
+**App de escritorio**: construye los instaladores con `VITE_API_URL=https://api.sprintos.run` para que hablen con la API alojada.
+
+### Asistentes de IA (MCP)
+
+La API incluye un servidor MCP en `/mcp` (`https://api.sprintos.run/mcp` en el servicio alojado). Claude, ChatGPT y Codex se conectan con OAuth a través de Clerk y actúan como el usuario que inició sesión, con los mismos espacios y rol que en la app. Cada persona encuentra los pasos en **Settings → AI assistants**. La lista de herramientas está en la [sección en inglés](#ai-assistants-mcp); cubren espacio, tareas, comentarios, notas, carpetas, miembros, equipos y notificaciones, y cada nota es además un recurso `daybook://<espacio>/notes/<id>` en Markdown.
+
+**Configura Clerk una vez por instancia**
+
+1. En el Clerk Dashboard, abre **Agents → MCP servers**, selecciona **Add MCP server** y escribe el endpoint exacto: `https://api.sprintos.run/mcp` en producción, `http://localhost:3001/mcp` en desarrollo. Así se activa el claim de audiencia que verifica la API.
+2. En **OAuth applications**, activa **Dynamic client registration** (Claude y Codex se registran solos) y define scopes por defecto para los clientes que no envían ninguno.
+3. Define `PUBLIC_API_URL` (y `APP_URL`) en la API para que la URL anunciada coincida con la de Clerk.
+
+**Cómo funciona**
+
+- Streamable HTTP sin estado (`@modelcontextprotocol/server` v2): cada petición crea un servidor nuevo, así que cualquier réplica responde. También atiende a clientes con las revisiones del protocolo de 2025.
+- Sin token válido, `/mcp` responde 401 con `WWW-Authenticate` apuntando a `/.well-known/oauth-protected-resource/mcp`, que indica a Clerk como servidor de autorización. Eso inicia el login en cada cliente.
+- Los tokens se verifican con Clerk (`acceptsToken: 'oauth_token'`, audiencia = la URL del MCP). El token identifica al usuario; la herramienta elige el espacio con el argumento `workspace` (id de organización de Clerk, id del espacio o nombre) y comprueba la membresía con Clerk en cada petición.
+- Las herramientas llaman a los mismos servicios que la API REST: permisos, límites, notificaciones y tiempo real funcionan igual. La actividad marca los cambios como **via AI assistant** y el límite de peticiones se comparte con la API REST.
+
+**Pruébalo en local**: arranca la API, luego `npx @modelcontextprotocol/inspector` y conéctate a `http://localhost:3001/mcp`. Claude y ChatGPT se conectan desde sus propios servidores, así que necesitan una URL HTTPS pública.
 
 ### Referencia de la API
 
@@ -733,7 +961,8 @@ Claude Code, OpenCode y otras herramientas que leen `.claude/` o `.agents/` las 
 
 ### Limitaciones conocidas
 
-- El bus de eventos y el límite de peticiones viven en el proceso de la API, así que el tiempo real y los límites asumen una sola instancia. Para varias instancias hace falta un bus compartido (por ejemplo Redis).
+- Mientras Redis no responde, los eventos publicados en ese rato no llegan; las páginas abiertas se ponen al día en su siguiente recarga.
+- Por ahora los asistentes de IA solo se conectan con OAuth; aún no hay API keys personales para scripts.
 - `PERSISTENCE=memory` pierde todo al reiniciar. Usa MongoDB para lo que quieras conservar.
 - Los enlaces `[[Título]]` usan el título, así que renombrar una nota rompe los enlaces que usaban el título anterior.
 - Arrastrar en el árbol de notas requiere puntero; con teclado se usan los menús **Move to…**.

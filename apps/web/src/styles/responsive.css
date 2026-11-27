@@ -221,6 +221,17 @@
   .panel-h {
     flex-wrap: wrap;
   }
+  .gs-step {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 10px 14px;
+  }
+  .gs-copy {
+    flex-basis: calc(100% - 28px);
+  }
+  .gs-step .btn {
+    margin-left: 28px;
+  }
   .panel-h h2 {
     white-space: nowrap;
   }

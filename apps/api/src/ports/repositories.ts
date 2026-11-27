@@ -4,6 +4,7 @@ export interface TaskRepository {
   list(workspaceId: string, query: TaskQuery): Promise<Task[]>;
   findById(workspaceId: string, id: string): Promise<Task | null>;
   create(task: Task): Promise<Task>;
+  count(workspaceId: string): Promise<number>;
   update(workspaceId: string, id: string, patch: Partial<Task>): Promise<Task | null>;
   remove(workspaceId: string, id: string): Promise<boolean>;
   nextKeyNumber(workspaceId: string): Promise<number>;
@@ -75,6 +76,7 @@ export interface NoteRepository {
   findByTitles(workspaceId: string, lowerCaseTitles: string[]): Promise<NoteSummary[]>;
   findLinkingTo(workspaceId: string, id: string): Promise<NoteSummary[]>;
   create(note: Note): Promise<Note>;
+  count(workspaceId: string): Promise<number>;
   update(workspaceId: string, id: string, patch: Partial<Note>): Promise<Note | null>;
   updateIfCurrent(workspaceId: string, id: string, updatedAt: number, patch: Partial<Note>): Promise<Note | null>;
   moveFolder(workspaceId: string, fromFolderId: string, toFolderId: string | null): Promise<void>;

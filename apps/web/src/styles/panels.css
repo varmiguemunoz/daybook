@@ -28,7 +28,7 @@
 }
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
@@ -139,3 +139,54 @@ button.nrow {
 }
 /* Inbox list works as a secondary sidebar: no visible scrollbar (it narrowed the rows), and the
    tab labels start on the gutter with tighter spacing so all five categories fit without clipping. */
+
+/* Home: first-run setup steps, shown until each is done or the person hides them */
+.get-started {
+  margin-bottom: 16px;
+}
+.get-started .gs-count {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.gs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gs-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--divider);
+}
+.gs-mark {
+  display: flex;
+  color: var(--text-3);
+}
+.gs-step.done .gs-mark {
+  color: var(--green);
+}
+.gs-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gs-title {
+  font-weight: 500;
+}
+.gs-step.done .gs-title {
+  color: var(--text-2);
+}
+.gs-text {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.gs-state {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}

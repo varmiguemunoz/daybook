@@ -6,7 +6,8 @@ import { subscribe, type BusEvent } from '../../shared/events/bus';
 const HEARTBEAT_MS = 25_000;
 
 function endsAccess(event: BusEvent, member: Member): boolean {
-  return event.type === 'workspace.deleted' || (event.type === 'member.removed' && event.payload === member.id);
+  if (event.type === 'server.shutdown' || event.type === 'workspace.deleted') return true;
+  return event.type === 'member.removed' && event.payload === member.id;
 }
 
 function relay(stream: SSEStreamingApi, workspaceId: string, member: Member): Promise<void> {

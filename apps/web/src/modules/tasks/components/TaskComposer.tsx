@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react';
 import { Modal } from '../../core/components/Modal';
 import { showToast } from '../../core/components/Toast';
+import { failureMessage } from '../../core/services/api-client';
 import { useMembers } from '../../members/services/queries';
 import type { TaskDefaults } from '../../views/lib/view-model';
 import { useCreateTask } from '../services/queries';
@@ -22,7 +23,7 @@ function ComposerForm({ defaults, onDone }: { defaults: TaskDefaults; onDone: ()
         showToast(`${task.key} created`, 'success');
         onDone();
       },
-      onError: () => showToast('Could not create the task', 'error'),
+      onError: error => showToast(failureMessage(error, 'Could not create the task'), 'error'),
     });
   }
 

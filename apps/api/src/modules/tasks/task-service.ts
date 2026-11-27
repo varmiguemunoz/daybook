@@ -5,6 +5,7 @@ import { invalidInput, notFound } from '../../http/errors';
 import { recordActivity } from '../activity/activity-service';
 import { notify } from '../notifications/notification-service';
 import { emit } from '../../shared/events/bus';
+import { assertQuota } from '../../shared/quotas';
 
 export function listTasks(repositories: Repositories, workspaceId: string, query: TaskQuery): Promise<Task[]> {
   return repositories.tasks.list(workspaceId, query);
@@ -70,6 +71,7 @@ async function assertAssignee(repositories: Repositories, workspaceId: string, a
 
 export async function createTask(repositories: Repositories, workspace: Workspace, input: CreateTaskInput, actorId: string): Promise<Task> {
   await assertAssignee(repositories, workspace.id, input.assigneeId);
+  await assertQuota('tasks', () => repositories.tasks.count(workspace.id));
   const number = await repositories.tasks.nextKeyNumber(workspace.id);
   const task = buildTask(input, workspace, number);
 

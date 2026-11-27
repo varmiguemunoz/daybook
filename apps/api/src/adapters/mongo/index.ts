@@ -1,5 +1,5 @@
 import type { Repositories } from '../../ports/repositories';
-import { connectDatabase, disconnectDatabase } from './connection';
+import { connectDatabase, databaseReady, disconnectDatabase } from './connection';
 import { MongoActivityRepository, MongoMemberRepository, MongoWorkspaceRepository } from './support-repositories';
 import { MongoCommentRepository, MongoNotificationRepository, MongoTeamRepository } from './extra-repositories';
 import { MongoTaskRepository } from './task-repository';
@@ -7,6 +7,7 @@ import { MongoFolderRepository, MongoNoteRepository } from './notes-repositories
 
 export interface MongoRepositories extends Repositories {
   close: () => Promise<void>;
+  ready: () => Promise<boolean>;
 }
 
 export async function createMongoRepositories(uri: string): Promise<MongoRepositories> {
@@ -23,5 +24,6 @@ export async function createMongoRepositories(uri: string): Promise<MongoReposit
     folders: new MongoFolderRepository(),
     notes: new MongoNoteRepository(),
     close: disconnectDatabase,
+    ready: databaseReady,
   };
 }

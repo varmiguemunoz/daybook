@@ -1,0 +1,66 @@
+# Production stack for a VPS: edge proxy, web, two API replicas and Redis.
+# MongoDB is not included: point MONGODB_URI in apps/api/.env at your database.
+#
+#   docker compose -f docker-compose.prod.yml --env-file apps/web/.env up -d --build
+#
+# apps/api/.env holds the API's runtime variables; apps/web/.env provides the web build arguments.
+
+services:
+  edge:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:?Set VITE_API_URL in apps/web/.env}
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:?Set VITE_CLERK_PUBLISHABLE_KEY in apps/web/.env}
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+
+  # Two API replicas share realtime events and rate limits through Redis; raise the count with API_REPLICAS.
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    env_file: apps/api/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+    deploy:
+      replicas: ${API_REPLICAS:-2}
+    stop_grace_period: 15s
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Holds only short-lived data (event fan-out and rate-limit counters), so nothing is written to disk.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--save', '', '--appendonly', 'no', '--maxmemory', '64mb', '--maxmemory-policy', 'volatile-ttl']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:

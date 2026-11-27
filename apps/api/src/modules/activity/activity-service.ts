@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { activitySchema, type Activity, type ActivityVerb } from '@daybook/domain';
 import type { Repositories } from '../../ports/repositories';
+import { currentSource } from '../../shared/request-context';
 
 export interface ActivityInput {
   workspaceId: string;
@@ -20,6 +21,7 @@ export async function recordActivity(repositories: Repositories, input: Activity
     taskId: input.taskId ?? null,
     projectId: input.projectId ?? null,
     detail: input.detail ?? '',
+    via: currentSource(),
     at: Date.now(),
   });
 

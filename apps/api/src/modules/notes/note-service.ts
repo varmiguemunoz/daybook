@@ -3,6 +3,7 @@ import { noteSchema, wikiTitles, type CreateNoteInput, type Note, type NoteDetai
 import type { NoteQuery, Repositories } from '../../ports/repositories';
 import { AppError, notFound } from '../../http/errors';
 import { emit } from '../../shared/events/bus';
+import { assertQuota } from '../../shared/quotas';
 import { assertFolder } from '../folders/folder-service';
 
 export function listNotes(repositories: Repositories, workspaceId: string, query: NoteQuery): Promise<NoteSummary[]> {
@@ -32,6 +33,7 @@ export async function getNote(repositories: Repositories, workspaceId: string, i
 
 export async function createNote(repositories: Repositories, workspaceId: string, input: CreateNoteInput, authorId: string): Promise<Note> {
   await assertFolder(repositories, workspaceId, input.folderId);
+  await assertQuota('notes', () => repositories.notes.count(workspaceId));
   const now = Date.now();
   const id = `note_${randomUUID()}`;
   const mentionIds = await mentionsOf(repositories, workspaceId, id, input.body);

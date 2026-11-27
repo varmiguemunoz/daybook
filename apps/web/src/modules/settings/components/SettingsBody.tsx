@@ -8,6 +8,7 @@ import { AppearanceSection } from './AppearanceSection';
 import { WorkspaceSection } from './WorkspaceSection';
 import { ProfileSection } from './ProfileSection';
 import { ShortcutsSection } from './ShortcutsSection';
+import { AssistantsSection } from './AssistantsSection';
 
 function Section({ title, lead, children }: { title: string; lead: string; children: ReactNode }) {
   return (
@@ -44,6 +45,7 @@ export function SettingsBody({ section }: { section: string }) {
     ),
     profile: <ProfileLoader />,
     shortcuts: <ShortcutsSection />,
+    assistants: <AssistantsSection />,
   };
 
   return sections[section] ?? <WorkspaceSection />;

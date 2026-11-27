@@ -1,0 +1,31 @@
+# Serves the built single-page app. TLS is handled by the platform or by the edge proxy in docker-compose.prod.yml.
+{
+	admin off
+	auto_https off
+}
+
+:{$PORT:8080} {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Hashed assets never change; the HTML must always be fresh so new deploys load.
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+	@pages not path /assets/*
+	header @pages Cache-Control "no-cache"
+
+	# Unknown page paths fall back to the app so routes like /notes survive a reload; missing assets stay 404.
+	@spa {
+		not path /assets/*
+		not file
+	}
+	rewrite @spa /index.html
+	file_server
+}

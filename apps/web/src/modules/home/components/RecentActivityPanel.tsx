@@ -1,5 +1,6 @@
 import type { Activity, Member, Task } from '@daybook/domain';
 import { Avatar } from '../../core/components/Avatar';
+import { EmptyState } from '../../core/components/EmptyState';
 import { timeAgo } from '../../core/utils/dates';
 import type { HomeData } from '../lib/home-data';
 
@@ -17,7 +18,9 @@ function ActivityEntry({ entry, actor, task, meId }: EntryProps) {
     <div className="fitem">
       <Avatar member={actor} className="sm" />
       <div className="grow">
-        <b>{actor?.id === meId ? 'You' : (actor?.name ?? 'Someone')}</b> <span className="muted">{entry.verb}</span> <span className="obj">{subject}</span>
+        <b>{actor?.id === meId ? 'You' : (actor?.name ?? 'Someone')}</b>
+        {entry.via === 'mcp' && <span className="muted"> via AI assistant</span>} <span className="muted">{entry.verb}</span>{' '}
+        <span className="obj">{subject}</span>
       </div>
       <time>{timeAgo(entry.at)}</time>
     </div>
@@ -38,6 +41,9 @@ export function RecentActivityPanel({ data }: { data: HomeData }) {
           </button>
         </div>
       </div>
+      {data.activity.length === 0 && (
+        <EmptyState icon="activity" title="No activity yet" text="Task changes from you and your team show up here." className="sm" />
+      )}
       <div className="panel-b feed lined">
         {data.activity.slice(0, 7).map(entry => (
           <ActivityEntry
